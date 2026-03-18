@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Badminton Match Maker Pro v3.2</title>
+    <title>Badminton Match Maker Pro v3.3</title>
     <style>
         body { font-family: sans-serif; margin: 0; padding: 0; background-color: #f4f7f6; color: #333; }
         .header { background-color: #2c3e50; color: white; padding: 15px 20px; text-align: center; font-size: 1.2rem; font-weight: bold; }
@@ -13,20 +13,25 @@
         .container { max-width: 800px; margin: 20px auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-        h2 { color: #2c3e50; font-size: 1.1rem; border-bottom: 2px solid #3498db; padding-bottom: 5px; margin-top: 0; }
+        h2 { color: #2c3e50; font-size: 1.1rem; border-bottom: 2px solid #3498db; padding-bottom: 5px; margin-top: 0; display: flex; justify-content: space-between; align-items: center; }
         .section { margin-bottom: 20px; padding: 15px; background: #fdfdfd; border: 1px solid #eee; border-radius: 5px; }
         button { background-color: #3498db; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 14px; margin: 5px 0; }
         button:hover { background-color: #2980b9; }
         .btn-danger { background-color: #e74c3c; }
         .btn-danger:hover { background-color: #c0392b; }
         .btn-edit { background-color: #f39c12; }
-        .btn-edit:hover { background-color: #d68910; }
-        .btn-cancel { background-color: #95a5a6; }
-        .btn-cancel:hover { background-color: #7f8c8d; }
+        .btn-pay { background-color: #ff0033; font-weight: bold; } /* PayPayカラー風 */
         .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 10px; }
         input[type="text"], input[type="number"], select { padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-size: 14px; }
-        .toggle-btn { margin: 5px; padding: 10px; border-radius: 5px; border: 1px solid #ccc; cursor: pointer; display: inline-block; width: calc(50% - 25px); text-align: center; }
-        .toggle-btn.active { background-color: #2ecc71; color: white; border-color: #27ae60; }
+        
+        /* 出欠カードのデザイン調整 */
+        .member-card { border: 1px solid #ddd; border-radius: 5px; padding: 10px; margin: 5px; display: inline-block; width: calc(50% - 35px); vertical-align: top; background: #fff; }
+        .status-btn { width: 100%; padding: 8px 0; border-radius: 4px; border: none; font-weight: bold; cursor: pointer; margin-top: 5px; }
+        .status-active { background-color: #2ecc71; color: white; }
+        .status-inactive { background-color: #ecf0f1; color: #7f8c8d; }
+        .pay-done { background-color: #f1c40f; color: white; }
+        .pay-wait { background-color: #ecf0f1; color: #7f8c8d; border: 1px dashed #bdc3c7; }
+
         .court-card { border: 2px solid #3498db; padding: 10px; border-radius: 8px; margin-bottom: 15px; background-color: #f8fbfd; }
         .player-slot { background: white; padding: 5px; margin: 3px 0; border-radius: 3px; border: 1px dashed #ccc; font-size: 0.9rem;}
         .history-card { border: 1px solid #ddd; padding: 10px; border-radius: 5px; margin-bottom: 10px; }
@@ -36,7 +41,7 @@
 </head>
 <body>
 
-<div class="header">🏸 Badminton Match Maker Pro v3.2</div>
+<div class="header">🏸 Badminton Match Maker Pro v3.3</div>
 <div class="tab-menu">
     <button class="tab-btn active" onclick="app.switchTab('tab-play')">今日の練習</button>
     <button class="tab-btn" onclick="app.switchTab('tab-members')">名簿管理</button>
@@ -57,7 +62,10 @@
         </div>
 
         <div class="section" id="attendance-section" style="display:none;">
-            <h2>出欠・待機管理 (<span id="current-session-group-name"></span>)</h2>
+            <h2>
+                <span>出欠・集金管理 (<span id="current-session-group-name"></span>)</span>
+                <button id="paypay-link-btn" class="btn-pay" style="display:none; font-size: 0.8rem;" onclick="app.openPayPay()">PayPayで集金</button>
+            </h2>
             <div id="member-ui"></div>
             <div style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
                 <button onclick="app.generateMatches()" style="font-size: 1.1rem; font-weight: bold; width: 100%;">次の組み合わせを生成</button>
@@ -86,12 +94,11 @@
             </div>
             <div style="margin-bottom: 5px; font-size: 0.9rem;">所属する練習会を選択:</div>
             <div class="checkbox-group" id="new-member-groups"></div>
-            
             <button id="submit-member-btn" onclick="app.submitMember()" style="margin-top: 10px;">メンバーを追加</button>
-            <button id="cancel-edit-btn" class="btn-cancel" onclick="app.resetForm()" style="margin-top: 10px; display: none;">キャンセル</button>
+            <button id="cancel-edit-btn" onclick="app.resetForm()" style="margin-top: 10px; display: none; background:#95a5a6;">キャンセル</button>
         </div>
         <div class="section">
-            <h2>登録メンバー一覧（グローバルデータ）</h2>
+            <h2>登録メンバー一覧</h2>
             <div id="member-database-ui" style="max-height: 400px; overflow-y: auto;"></div>
         </div>
     </div>
@@ -100,7 +107,8 @@
         <div class="section">
             <h2>新しい練習会の追加</h2>
             <div class="controls">
-                <input type="text" id="new-group-name" placeholder="例: ミナクサ会" style="width: 200px;">
+                <input type="text" id="new-group-name" placeholder="例: ミナクサ会" style="width: 150px;">
+                <input type="text" id="new-group-paypay" placeholder="PayPayリンク (任意)" style="width: 200px;">
                 <button onclick="app.addGroup()">練習会を追加</button>
             </div>
         </div>
@@ -122,7 +130,7 @@
 <script>
 const app = {
     members: [],
-    groups: [],
+    groups: [], // [{name: 'ミナクサ会', paypayLink: 'https://...'}] の形式に変更
     history: [],
     currentSession: null,
     editingMemberId: null,
@@ -143,8 +151,13 @@ const app = {
         const savedHistory = localStorage.getItem('bm_history_v3');
         
         if (savedMembers) this.members = JSON.parse(savedMembers);
-        if (savedGroups) this.groups = JSON.parse(savedGroups);
         if (savedHistory) this.history = JSON.parse(savedHistory);
+        
+        // グループデータの互換性マイグレーション（文字列配列からオブジェクト配列へ）
+        if (savedGroups) {
+            let parsedGroups = JSON.parse(savedGroups);
+            this.groups = parsedGroups.map(g => typeof g === 'string' ? { name: g, paypayLink: '' } : g);
+        }
 
         this.members.forEach(m => {
             if (!m.groups) m.groups = m.group ? [m.group] : [];
@@ -169,26 +182,29 @@ const app = {
     switchTab(tabId) {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-        
         document.getElementById(tabId).classList.add('active');
         const activeBtn = document.querySelector(`.tab-btn[onclick="app.switchTab('${tabId}')"]`);
         if(activeBtn) activeBtn.classList.add('active');
     },
 
+    // --- グループ管理 ---
     addGroup() {
         const name = document.getElementById('new-group-name').value.trim();
-        if (!name) return alert('練習会名を入力してください');
-        if (this.groups.includes(name)) return alert('その練習会は既に存在します');
+        const paypayLink = document.getElementById('new-group-paypay').value.trim();
         
-        this.groups.push(name);
+        if (!name) return alert('練習会名を入力してください');
+        if (this.groups.some(g => g.name === name)) return alert('その練習会は既に存在します');
+        
+        this.groups.push({ name: name, paypayLink: paypayLink });
         document.getElementById('new-group-name').value = '';
+        document.getElementById('new-group-paypay').value = '';
         this.saveData();
         this.renderAll();
     },
 
     deleteGroup(groupName) {
-        if(confirm(`「${groupName}」を削除しますか？\n※メンバーの所属情報からも解除されます。`)) {
-            this.groups = this.groups.filter(g => g !== groupName);
+        if(confirm(`「${groupName}」を削除しますか？`)) {
+            this.groups = this.groups.filter(g => g.name !== groupName);
             this.members.forEach(m => { m.groups = m.groups.filter(g => g !== groupName); });
             this.saveData();
             this.renderAll();
@@ -198,9 +214,12 @@ const app = {
     renderGroups() {
         const ui = document.getElementById('group-list-ui');
         ui.innerHTML = this.groups.map(g => `
-            <div style="border-bottom: 1px solid #eee; padding: 8px 0; display: flex; justify-content: space-between; align-items: center;">
-                <span><b>${g}</b></span>
-                <button class="btn-danger" style="padding: 4px 8px; font-size: 0.8rem;" onclick="app.deleteGroup('${g}')">削除</button>
+            <div style="border-bottom: 1px solid #eee; padding: 10px 0; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <b>${g.name}</b><br>
+                    <small style="color:#666;">PayPay: ${g.paypayLink ? '設定済' : '未設定'}</small>
+                </div>
+                <button class="btn-danger" style="padding: 4px 8px; font-size: 0.8rem;" onclick="app.deleteGroup('${g.name}')">削除</button>
             </div>
         `).join('') || '<p style="color:#777;">練習会が登録されていません。</p>';
     },
@@ -208,15 +227,15 @@ const app = {
     updateGroupSelects() {
         const playSelect = document.getElementById('session-group-select');
         playSelect.innerHTML = this.groups.length > 0 ? '' : '<option value="">練習会を登録してください</option>';
-        this.groups.forEach(g => { playSelect.innerHTML += `<option value="${g}">${g}</option>`; });
+        this.groups.forEach(g => { playSelect.innerHTML += `<option value="${g.name}">${g.name}</option>`; });
 
         const memberGroupsUi = document.getElementById('new-member-groups');
         memberGroupsUi.innerHTML = this.groups.map(g => `
-            <label><input type="checkbox" value="${g}" class="new-member-group-chk"> ${g}</label>
-        `).join('') || '<span style="color:#777; font-size:0.9rem;">先に「練習会管理」タブで練習会を作成してください。</span>';
+            <label><input type="checkbox" value="${g.name}" class="new-member-group-chk"> ${g.name}</label>
+        `).join('') || '<span style="color:#777; font-size:0.9rem;">先に練習会を作成してください。</span>';
     },
 
-    // --- メンバー追加・編集・削除ロジック ---
+    // --- メンバー管理 ---
     submitMember() {
         const name = document.getElementById('new-name').value.trim();
         const gender = document.getElementById('new-gender').value;
@@ -226,23 +245,14 @@ const app = {
         if (!name) return alert('名前を入力してください');
 
         if (this.editingMemberId) {
-            // 編集モード
             const m = this.members.find(x => x.id === this.editingMemberId);
-            if (m) {
-                m.name = name;
-                m.gender = gender;
-                m.rating = this.rankToRating[rank];
-                m.groups = checkedGroups;
-            }
+            if (m) { m.name = name; m.gender = gender; m.rating = this.rankToRating[rank]; m.groups = checkedGroups; }
         } else {
-            // 新規追加モード
             this.members.push({
                 id: Date.now(), name, gender, groups: checkedGroups,
-                rating: this.rankToRating[rank],
-                active: false, playCount: 0
+                rating: this.rankToRating[rank], active: false, playCount: 0
             });
         }
-
         this.resetForm();
         this.saveData();
         this.renderDatabase();
@@ -251,29 +261,17 @@ const app = {
     editMember(id) {
         const m = this.members.find(x => x.id === id);
         if (!m) return;
-        
         this.editingMemberId = id;
         document.getElementById('form-title').innerText = 'メンバー情報の編集';
         document.getElementById('new-name').value = m.name;
         document.getElementById('new-gender').value = m.gender;
+        document.getElementById('new-rank').value = this.ratingToRank[m.rating] || 'C';
+        document.querySelectorAll('.new-member-group-chk').forEach(cb => { cb.checked = m.groups.includes(cb.value); });
         
-        // レーティングからABCDランクを逆算して選択状態にする
-        const rankValue = this.ratingToRank[m.rating] || 'C';
-        document.getElementById('new-rank').value = rankValue;
-
-        // グループのチェックボックスを復元
-        document.querySelectorAll('.new-member-group-chk').forEach(cb => {
-            cb.checked = m.groups.includes(cb.value);
-        });
-
-        // ボタンの見た目とテキストを変更
         const submitBtn = document.getElementById('submit-member-btn');
         submitBtn.innerText = '情報を更新する';
         submitBtn.classList.add('btn-edit');
-        
         document.getElementById('cancel-edit-btn').style.display = 'inline-block';
-        
-        // 画面上部へスクロール
         window.scrollTo({ top: 0, behavior: 'smooth' });
     },
 
@@ -287,7 +285,6 @@ const app = {
         const submitBtn = document.getElementById('submit-member-btn');
         submitBtn.innerText = 'メンバーを追加';
         submitBtn.classList.remove('btn-edit');
-        
         document.getElementById('cancel-edit-btn').style.display = 'none';
     },
 
@@ -304,25 +301,27 @@ const app = {
         ui.innerHTML = this.members.map(m => `
             <div style="border-bottom: 1px solid #eee; padding: 10px 0; display: flex; justify-content: space-between; align-items: center;">
                 <div>
-                    <b style="font-size: 1.05rem;">${m.name}</b> (${m.gender}, Rank: ${this.getRank(m.rating)})<br>
-                    <small style="color: #666;">所属: ${m.groups.length > 0 ? m.groups.join(', ') : '所属なし'}</small>
+                    <b>${m.name}</b> (${m.gender}, Rank: ${this.getRank(m.rating)})<br>
+                    <small style="color: #666;">所属: ${m.groups.length > 0 ? m.groups.join(', ') : 'なし'}</small>
                 </div>
                 <div style="display: flex; gap: 5px;">
-                    <button class="btn-edit" style="padding: 5px 10px; font-size: 0.85rem;" onclick="app.editMember(${m.id})">編集</button>
-                    <button class="btn-danger" style="padding: 5px 10px; font-size: 0.85rem;" onclick="app.deleteMember(${m.id})">削除</button>
+                    <button class="btn-edit" style="padding: 5px 10px;" onclick="app.editMember(${m.id})">編集</button>
+                    <button class="btn-danger" style="padding: 5px 10px;" onclick="app.deleteMember(${m.id})">削除</button>
                 </div>
             </div>
         `).join('') || '<p>メンバーがいません</p>';
     },
 
-    // --- セッション（今日の練習）ロジック ---
+    // --- 今日の練習（セッション） ---
     initSession() {
-        const targetGroup = document.getElementById('session-group-select').value;
-        if (!targetGroup) return alert('練習会を選択してください。');
+        const targetGroupName = document.getElementById('session-group-select').value;
+        if (!targetGroupName) return alert('練習会を選択してください。');
 
+        const targetGroupObj = this.groups.find(g => g.name === targetGroupName);
         const courts = parseInt(document.getElementById('court-count').value);
-        let targetMembers = this.members.filter(m => m.groups.includes(targetGroup));
-        if(targetMembers.length === 0) return alert(`${targetGroup}に所属するメンバーがいません。「名簿管理」で追加してください。`);
+        let targetMembers = this.members.filter(m => m.groups.includes(targetGroupName));
+        
+        if(targetMembers.length === 0) return alert(`${targetGroupName}に所属するメンバーがいません。`);
 
         this.members.forEach(m => { m.active = false; m.playCount = 0; });
         targetMembers.forEach(m => m.active = true);
@@ -331,17 +330,33 @@ const app = {
         this.currentSession = {
             date: now.toLocaleDateString(),
             time: now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-            group: targetGroup,
+            group: targetGroupName,
+            paypayLink: targetGroupObj ? targetGroupObj.paypayLink : '',
             courts: courts,
             gameCount: 1,
-            matches: []
+            matches: [],
+            payments: {} // { memberId: true/false } 集金管理用
         };
 
-        document.getElementById('current-session-group-name').innerText = targetGroup;
+        document.getElementById('current-session-group-name').innerText = targetGroupName;
+        
+        const payBtn = document.getElementById('paypay-link-btn');
+        if(this.currentSession.paypayLink) {
+            payBtn.style.display = 'inline-block';
+        } else {
+            payBtn.style.display = 'none';
+        }
+
         document.getElementById('setup-section').style.display = 'none';
         document.getElementById('attendance-section').style.display = 'block';
         document.getElementById('match-section').style.display = 'block';
         this.renderAttendance();
+    },
+
+    openPayPay() {
+        if(this.currentSession && this.currentSession.paypayLink) {
+            window.open(this.currentSession.paypayLink, '_blank');
+        }
     },
 
     toggleStatus(id) {
@@ -349,12 +364,31 @@ const app = {
         if (m) { m.active = !m.active; this.renderAttendance(); }
     },
 
+    togglePayment(id) {
+        if(this.currentSession) {
+            this.currentSession.payments[id] = !this.currentSession.payments[id];
+            this.renderAttendance();
+        }
+    },
+
     renderAttendance() {
         const ui = document.getElementById('member-ui');
         const sessionMembers = this.members.filter(m => m.groups.includes(this.currentSession.group));
+        
         ui.innerHTML = sessionMembers.map(m => `
-            <div class="toggle-btn ${m.active ? 'active' : 'inactive'}" onclick="app.toggleStatus(${m.id})">
-                ${m.name}<br><small>待機回数: ${m.playCount}</small>
+            <div class="member-card">
+                <div style="font-weight: bold; font-size: 1.05rem; margin-bottom: 5px;">${m.name}</div>
+                <div style="font-size: 0.8rem; color: #666; margin-bottom: 8px;">待機: ${m.playCount}回</div>
+                
+                <button class="status-btn ${m.active ? 'status-active' : 'status-inactive'}" onclick="app.toggleStatus(${m.id})">
+                    ${m.active ? '出席' : '休み'}
+                </button>
+                
+                ${m.active ? `
+                <button class="status-btn ${this.currentSession.payments[m.id] ? 'pay-done' : 'pay-wait'}" onclick="app.togglePayment(${m.id})">
+                    ${this.currentSession.payments[m.id] ? '集金済' : '未納'}
+                </button>
+                ` : ''}
             </div>
         `).join('');
     },
