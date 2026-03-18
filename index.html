@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Badminton Match Maker Pro v3.3</title>
+    <title>Badminton Match Maker Pro v3.5</title>
     <style>
         body { font-family: sans-serif; margin: 0; padding: 0; background-color: #f4f7f6; color: #333; }
         .header { background-color: #2c3e50; color: white; padding: 15px 20px; text-align: center; font-size: 1.2rem; font-weight: bold; }
@@ -20,11 +20,11 @@
         .btn-danger { background-color: #e74c3c; }
         .btn-danger:hover { background-color: #c0392b; }
         .btn-edit { background-color: #f39c12; }
-        .btn-pay { background-color: #ff0033; font-weight: bold; } /* PayPayカラー風 */
+        .btn-pay { background-color: #ff0033; font-weight: bold; }
+        .btn-success { background-color: #2ecc71; }
         .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 10px; }
         input[type="text"], input[type="number"], select { padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-size: 14px; }
         
-        /* 出欠カードのデザイン調整 */
         .member-card { border: 1px solid #ddd; border-radius: 5px; padding: 10px; margin: 5px; display: inline-block; width: calc(50% - 35px); vertical-align: top; background: #fff; }
         .status-btn { width: 100%; padding: 8px 0; border-radius: 4px; border: none; font-weight: bold; cursor: pointer; margin-top: 5px; }
         .status-active { background-color: #2ecc71; color: white; }
@@ -33,7 +33,9 @@
         .pay-wait { background-color: #ecf0f1; color: #7f8c8d; border: 1px dashed #bdc3c7; }
 
         .court-card { border: 2px solid #3498db; padding: 10px; border-radius: 8px; margin-bottom: 15px; background-color: #f8fbfd; }
-        .player-slot { background: white; padding: 5px; margin: 3px 0; border-radius: 3px; border: 1px dashed #ccc; font-size: 0.9rem;}
+        .team-box { background: white; padding: 5px; border-radius: 3px; border: 1px dashed #ccc; margin-bottom: 5px;}
+        .score-input-area { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 10px; padding-top: 10px; border-top: 1px dotted #ccc; }
+        
         .history-card { border: 1px solid #ddd; padding: 10px; border-radius: 5px; margin-bottom: 10px; }
         .history-date { font-weight: bold; color: #3498db; margin-bottom: 5px; }
         .checkbox-group { display: flex; flex-wrap: wrap; gap: 10px; background: #fff; padding: 10px; border: 1px solid #ccc; border-radius: 4px; max-height: 100px; overflow-y: auto;}
@@ -41,7 +43,7 @@
 </head>
 <body>
 
-<div class="header">🏸 Badminton Match Maker Pro v3.3</div>
+<div class="header">🏸 Badminton Match Maker Pro v3.5</div>
 <div class="tab-menu">
     <button class="tab-btn active" onclick="app.switchTab('tab-play')">今日の練習</button>
     <button class="tab-btn" onclick="app.switchTab('tab-members')">名簿管理</button>
@@ -67,8 +69,17 @@
                 <button id="paypay-link-btn" class="btn-pay" style="display:none; font-size: 0.8rem;" onclick="app.openPayPay()">PayPayで集金</button>
             </h2>
             <div id="member-ui"></div>
-            <div style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
-                <button onclick="app.generateMatches()" style="font-size: 1.1rem; font-weight: bold; width: 100%;">次の組み合わせを生成</button>
+            
+            <div style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px; background: #f9f9f9; padding: 15px; border-radius: 5px;">
+                <div style="margin-bottom: 10px; font-weight: bold; color: #2c3e50;">⚙️ 組み合わせ設定</div>
+                <label style="display: block; margin-bottom: 10px;">
+                    モード選択: 
+                    <select id="match-mode-select" style="width: 100%; max-width: 300px; padding: 10px;">
+                        <option value="mixed">均等ミックス (強い人と弱い人を混ぜる)</option>
+                        <option value="level">レベル別 (強い人同士・初級者同士で固める)</option>
+                    </select>
+                </label>
+                <button onclick="app.generateMatches()" style="font-size: 1.1rem; font-weight: bold; width: 100%; padding: 12px;">次の組み合わせを生成</button>
             </div>
         </div>
 
@@ -130,11 +141,13 @@
 <script>
 const app = {
     members: [],
-    groups: [], // [{name: 'ミナクサ会', paypayLink: 'https://...'}] の形式に変更
+    groups: [], 
     history: [],
     currentSession: null,
     editingMemberId: null,
     
+    // イロレーティング基礎設定
+    K_FACTOR: 32,
     rankToRating: { 'A': 1600, 'B': 1500, 'C': 1400, 'D': 1300 },
     ratingToRank: { 1600: 'A', 1500: 'B', 1400: 'C', 1300: 'D' },
 
@@ -152,15 +165,11 @@ const app = {
         
         if (savedMembers) this.members = JSON.parse(savedMembers);
         if (savedHistory) this.history = JSON.parse(savedHistory);
-        
-        // グループデータの互換性マイグレーション（文字列配列からオブジェクト配列へ）
-        if (savedGroups) {
-            let parsedGroups = JSON.parse(savedGroups);
-            this.groups = parsedGroups.map(g => typeof g === 'string' ? { name: g, paypayLink: '' } : g);
-        }
+        if (savedGroups) this.groups = JSON.parse(savedGroups).map(g => typeof g === 'string' ? { name: g, paypayLink: '' } : g);
 
         this.members.forEach(m => {
             if (!m.groups) m.groups = m.group ? [m.group] : [];
+            if (!m.rating) m.rating = 1400; // 初期値フェイルセーフ
         });
         
         this.renderAll();
@@ -187,77 +196,57 @@ const app = {
         if(activeBtn) activeBtn.classList.add('active');
     },
 
-    // --- グループ管理 ---
+    // --- グループ管理・名簿管理関連 (省略せず記載) ---
     addGroup() {
         const name = document.getElementById('new-group-name').value.trim();
         const paypayLink = document.getElementById('new-group-paypay').value.trim();
-        
         if (!name) return alert('練習会名を入力してください');
         if (this.groups.some(g => g.name === name)) return alert('その練習会は既に存在します');
-        
         this.groups.push({ name: name, paypayLink: paypayLink });
         document.getElementById('new-group-name').value = '';
         document.getElementById('new-group-paypay').value = '';
-        this.saveData();
-        this.renderAll();
+        this.saveData(); this.renderAll();
     },
-
     deleteGroup(groupName) {
         if(confirm(`「${groupName}」を削除しますか？`)) {
             this.groups = this.groups.filter(g => g.name !== groupName);
             this.members.forEach(m => { m.groups = m.groups.filter(g => g !== groupName); });
-            this.saveData();
-            this.renderAll();
+            this.saveData(); this.renderAll();
         }
     },
-
     renderGroups() {
         const ui = document.getElementById('group-list-ui');
         ui.innerHTML = this.groups.map(g => `
             <div style="border-bottom: 1px solid #eee; padding: 10px 0; display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <b>${g.name}</b><br>
-                    <small style="color:#666;">PayPay: ${g.paypayLink ? '設定済' : '未設定'}</small>
-                </div>
+                <div><b>${g.name}</b><br><small style="color:#666;">PayPay: ${g.paypayLink ? '設定済' : '未設定'}</small></div>
                 <button class="btn-danger" style="padding: 4px 8px; font-size: 0.8rem;" onclick="app.deleteGroup('${g.name}')">削除</button>
             </div>
         `).join('') || '<p style="color:#777;">練習会が登録されていません。</p>';
     },
-
     updateGroupSelects() {
         const playSelect = document.getElementById('session-group-select');
         playSelect.innerHTML = this.groups.length > 0 ? '' : '<option value="">練習会を登録してください</option>';
         this.groups.forEach(g => { playSelect.innerHTML += `<option value="${g.name}">${g.name}</option>`; });
-
         const memberGroupsUi = document.getElementById('new-member-groups');
         memberGroupsUi.innerHTML = this.groups.map(g => `
             <label><input type="checkbox" value="${g.name}" class="new-member-group-chk"> ${g.name}</label>
         `).join('') || '<span style="color:#777; font-size:0.9rem;">先に練習会を作成してください。</span>';
     },
-
-    // --- メンバー管理 ---
     submitMember() {
         const name = document.getElementById('new-name').value.trim();
         const gender = document.getElementById('new-gender').value;
         const rank = document.getElementById('new-rank').value;
         const checkedGroups = Array.from(document.querySelectorAll('.new-member-group-chk:checked')).map(cb => cb.value);
-
         if (!name) return alert('名前を入力してください');
 
         if (this.editingMemberId) {
             const m = this.members.find(x => x.id === this.editingMemberId);
             if (m) { m.name = name; m.gender = gender; m.rating = this.rankToRating[rank]; m.groups = checkedGroups; }
         } else {
-            this.members.push({
-                id: Date.now(), name, gender, groups: checkedGroups,
-                rating: this.rankToRating[rank], active: false, playCount: 0
-            });
+            this.members.push({ id: Date.now(), name, gender, groups: checkedGroups, rating: this.rankToRating[rank], active: false, playCount: 0 });
         }
-        this.resetForm();
-        this.saveData();
-        this.renderDatabase();
+        this.resetForm(); this.saveData(); this.renderDatabase();
     },
-
     editMember(id) {
         const m = this.members.find(x => x.id === id);
         if (!m) return;
@@ -265,45 +254,35 @@ const app = {
         document.getElementById('form-title').innerText = 'メンバー情報の編集';
         document.getElementById('new-name').value = m.name;
         document.getElementById('new-gender').value = m.gender;
-        document.getElementById('new-rank').value = this.ratingToRank[m.rating] || 'C';
+        document.getElementById('new-rank').value = this.ratingToRank[m.rating] || this.getRank(m.rating);
         document.querySelectorAll('.new-member-group-chk').forEach(cb => { cb.checked = m.groups.includes(cb.value); });
         
         const submitBtn = document.getElementById('submit-member-btn');
-        submitBtn.innerText = '情報を更新する';
-        submitBtn.classList.add('btn-edit');
+        submitBtn.innerText = '情報を更新する'; submitBtn.classList.add('btn-edit');
         document.getElementById('cancel-edit-btn').style.display = 'inline-block';
         window.scrollTo({ top: 0, behavior: 'smooth' });
     },
-
     resetForm() {
         this.editingMemberId = null;
         document.getElementById('form-title').innerText = '新規メンバー登録';
         document.getElementById('new-name').value = '';
         document.getElementById('new-rank').value = 'C';
         document.querySelectorAll('.new-member-group-chk').forEach(cb => cb.checked = false);
-        
         const submitBtn = document.getElementById('submit-member-btn');
-        submitBtn.innerText = 'メンバーを追加';
-        submitBtn.classList.remove('btn-edit');
+        submitBtn.innerText = 'メンバーを追加'; submitBtn.classList.remove('btn-edit');
         document.getElementById('cancel-edit-btn').style.display = 'none';
     },
-
     deleteMember(id) {
         if(confirm('完全に削除しますか？')) {
             this.members = this.members.filter(m => m.id !== id);
-            this.saveData();
-            this.renderDatabase();
+            this.saveData(); this.renderDatabase();
         }
     },
-
     renderDatabase() {
         const ui = document.getElementById('member-database-ui');
         ui.innerHTML = this.members.map(m => `
             <div style="border-bottom: 1px solid #eee; padding: 10px 0; display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <b>${m.name}</b> (${m.gender}, Rank: ${this.getRank(m.rating)})<br>
-                    <small style="color: #666;">所属: ${m.groups.length > 0 ? m.groups.join(', ') : 'なし'}</small>
-                </div>
+                <div><b>${m.name}</b> (${m.gender}, Rank: ${this.getRank(m.rating)}, Rate: ${Math.round(m.rating)})<br><small style="color: #666;">所属: ${m.groups.length > 0 ? m.groups.join(', ') : 'なし'}</small></div>
                 <div style="display: flex; gap: 5px;">
                     <button class="btn-edit" style="padding: 5px 10px;" onclick="app.editMember(${m.id})">編集</button>
                     <button class="btn-danger" style="padding: 5px 10px;" onclick="app.deleteMember(${m.id})">削除</button>
@@ -328,24 +307,14 @@ const app = {
 
         const now = new Date();
         this.currentSession = {
-            date: now.toLocaleDateString(),
-            time: now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-            group: targetGroupName,
-            paypayLink: targetGroupObj ? targetGroupObj.paypayLink : '',
-            courts: courts,
-            gameCount: 1,
-            matches: [],
-            payments: {} // { memberId: true/false } 集金管理用
+            date: now.toLocaleDateString(), time: now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+            group: targetGroupName, paypayLink: targetGroupObj ? targetGroupObj.paypayLink : '',
+            courts: courts, gameCount: 1, matches: [], payments: {} 
         };
 
         document.getElementById('current-session-group-name').innerText = targetGroupName;
-        
         const payBtn = document.getElementById('paypay-link-btn');
-        if(this.currentSession.paypayLink) {
-            payBtn.style.display = 'inline-block';
-        } else {
-            payBtn.style.display = 'none';
-        }
+        payBtn.style.display = this.currentSession.paypayLink ? 'inline-block' : 'none';
 
         document.getElementById('setup-section').style.display = 'none';
         document.getElementById('attendance-section').style.display = 'block';
@@ -354,43 +323,36 @@ const app = {
     },
 
     openPayPay() {
-        if(this.currentSession && this.currentSession.paypayLink) {
-            window.open(this.currentSession.paypayLink, '_blank');
-        }
+        if(this.currentSession && this.currentSession.paypayLink) window.open(this.currentSession.paypayLink, '_blank');
     },
-
     toggleStatus(id) {
         const m = this.members.find(m => m.id === id);
         if (m) { m.active = !m.active; this.renderAttendance(); }
     },
-
     togglePayment(id) {
-        if(this.currentSession) {
-            this.currentSession.payments[id] = !this.currentSession.payments[id];
-            this.renderAttendance();
-        }
+        if(this.currentSession) { this.currentSession.payments[id] = !this.currentSession.payments[id]; this.renderAttendance(); }
     },
 
     renderAttendance() {
         const ui = document.getElementById('member-ui');
         const sessionMembers = this.members.filter(m => m.groups.includes(this.currentSession.group));
-        
         ui.innerHTML = sessionMembers.map(m => `
             <div class="member-card">
-                <div style="font-weight: bold; font-size: 1.05rem; margin-bottom: 5px;">${m.name}</div>
+                <div style="font-weight: bold; font-size: 1.05rem; margin-bottom: 5px;">${m.name} <span style="font-size:0.8rem; color:#888;">(${this.getRank(m.rating)})</span></div>
                 <div style="font-size: 0.8rem; color: #666; margin-bottom: 8px;">待機: ${m.playCount}回</div>
-                
-                <button class="status-btn ${m.active ? 'status-active' : 'status-inactive'}" onclick="app.toggleStatus(${m.id})">
-                    ${m.active ? '出席' : '休み'}
-                </button>
-                
-                ${m.active ? `
-                <button class="status-btn ${this.currentSession.payments[m.id] ? 'pay-done' : 'pay-wait'}" onclick="app.togglePayment(${m.id})">
-                    ${this.currentSession.payments[m.id] ? '集金済' : '未納'}
-                </button>
-                ` : ''}
+                <button class="status-btn ${m.active ? 'status-active' : 'status-inactive'}" onclick="app.toggleStatus(${m.id})">${m.active ? '出席' : '休み'}</button>
+                ${m.active ? `<button class="status-btn ${this.currentSession.payments[m.id] ? 'pay-done' : 'pay-wait'}" onclick="app.togglePayment(${m.id})">${this.currentSession.payments[m.id] ? '集金済' : '未納'}</button>` : ''}
             </div>
         `).join('');
+    },
+
+    // 配列をランダムにシャッフルする関数（A案: 固定化回避用）
+    shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
     },
 
     generateMatches() {
@@ -402,20 +364,51 @@ const app = {
 
         let selected = [...activeMembers].sort((a, b) => a.playCount - b.playCount).slice(0, needed);
         selected.forEach(p => { const m = this.members.find(x => x.id === p.id); if(m) m.playCount++; });
+        
+        // 全体を実力順に並べ替え
         selected.sort((a, b) => b.rating - a.rating);
 
+        const mode = document.getElementById('match-mode-select').value;
         const ui = document.getElementById('courts-ui');
         ui.innerHTML = '';
+        
         let currentMatchRecord = { game: this.currentSession.gameCount, courts: [] };
 
         for (let i = 0; i < this.currentSession.courts; i++) {
-            const players = [selected[i], selected[i + this.currentSession.courts], selected[i + this.currentSession.courts * 2], selected[i + this.currentSession.courts * 3]];
-            currentMatchRecord.courts.push(players.map(p => p.name));
+            let players;
+            if (mode === 'level') {
+                // レベル別: 4人を選出し、その4人の中でペアと対戦をシャッフル (A案解決)
+                players = [ selected[i * 4], selected[i * 4 + 1], selected[i * 4 + 2], selected[i * 4 + 3] ];
+                players = this.shuffleArray(players);
+            } else {
+                // 均等ミックス
+                players = [ selected[i], selected[i + this.currentSession.courts], selected[i + this.currentSession.courts * 2], selected[i + this.currentSession.courts * 3] ];
+                players = this.shuffleArray(players);
+            }
+
+            // コート情報の保存形式（IDで保存してレーティング計算に利用）
+            currentMatchRecord.courts.push({
+                team1: [players[0].id, players[1].id],
+                team2: [players[2].id, players[3].id],
+                names: players.map(p => p.name)
+            });
             
             ui.innerHTML += `
-                <div class="court-card">
+                <div class="court-card" id="court-card-${i}">
                     <h3 style="margin-top:0;">第 ${i + 1} コート</h3>
-                    ${players.map(p => `<div class="player-slot">${p.name} (${p.gender}, Rank: ${this.getRank(p.rating)})</div>`).join('')}
+                    <div class="team-box">
+                        <b>Team 1:</b> ${players[0].name} (${this.getRank(players[0].rating)}) & ${players[1].name} (${this.getRank(players[1].rating)})
+                    </div>
+                    <div style="text-align:center; font-size:0.8rem; color:#888;">VS</div>
+                    <div class="team-box">
+                        <b>Team 2:</b> ${players[2].name} (${this.getRank(players[2].rating)}) & ${players[3].name} (${this.getRank(players[3].rating)})
+                    </div>
+                    
+                    <div class="score-input-area" id="score-area-${i}">
+                        <input type="number" id="score_t1_${i}" placeholder="T1得点" style="width: 60px;"> - 
+                        <input type="number" id="score_t2_${i}" placeholder="T2得点" style="width: 60px;">
+                        <button class="btn-success" onclick="app.registerScore(${i})">結果登録</button>
+                    </div>
                 </div>
             `;
         }
@@ -425,12 +418,62 @@ const app = {
         document.getElementById('game-number').innerText = this.currentSession.gameCount++;
     },
 
+    // --- B案: イロレーティング計算ロジック ---
+    registerScore(courtIndex) {
+        const score1 = parseInt(document.getElementById(`score_t1_${courtIndex}`).value);
+        const score2 = parseInt(document.getElementById(`score_t2_${courtIndex}`).value);
+        
+        if (isNaN(score1) || isNaN(score2)) return alert("得点を正しく入力してください");
+
+        // 現在のゲーム記録から該当コートの選手IDを取得
+        const matchRecord = this.currentSession.matches[this.currentSession.matches.length - 1];
+        const courtData = matchRecord.courts[courtIndex];
+        
+        const t1_p1 = this.members.find(m => m.id === courtData.team1[0]);
+        const t1_p2 = this.members.find(m => m.id === courtData.team1[1]);
+        const t2_p1 = this.members.find(m => m.id === courtData.team2[0]);
+        const t2_p2 = this.members.find(m => m.id === courtData.team2[1]);
+
+        if(!t1_p1 || !t1_p2 || !t2_p1 || !t2_p2) return;
+
+        // チームの平均レーティングを計算
+        const r1 = (t1_p1.rating + t1_p2.rating) / 2;
+        const r2 = (t2_p1.rating + t2_p2.rating) / 2;
+
+        // イロレーティングの期待値計算
+        const expected1 = 1 / (1 + Math.pow(10, (r2 - r1) / 400));
+        const expected2 = 1 / (1 + Math.pow(10, (r1 - r2) / 400));
+
+        // 実際の勝敗結果 (1: 勝ち, 0: 負け, 0.5: 引き分け) と得失点差ボーナス
+        let actual1, actual2;
+        const pointDiff = Math.abs(score1 - score2);
+        // 大差で勝つと変動幅が大きくなるボーナス係数 (最大1.5倍程度)
+        const marginMultiplier = Math.log(pointDiff + 1) * 0.5 + 0.5; 
+
+        if (score1 > score2) { actual1 = 1; actual2 = 0; } 
+        else if (score1 < score2) { actual1 = 0; actual2 = 1; } 
+        else { actual1 = 0.5; actual2 = 0.5; }
+
+        // 変動値の計算
+        const delta1 = this.K_FACTOR * marginMultiplier * (actual1 - expected1);
+        const delta2 = this.K_FACTOR * marginMultiplier * (actual2 - expected2);
+
+        // 各個人のレーティングを更新
+        t1_p1.rating += delta1; t1_p2.rating += delta1;
+        t2_p1.rating += delta2; t2_p2.rating += delta2;
+
+        this.saveData();
+        this.renderAttendance(); // 昇降格の表示更新
+        
+        // 入力欄を隠して完了メッセージを表示
+        document.getElementById(`score-area-${courtIndex}`).innerHTML = `<span style="color:#2ecc71; font-weight:bold;">✓ スコア登録完了 (レーティング更新済)</span>`;
+    },
+
     endSession() {
         if(confirm('練習会を終了して記録を保存しますか？')) {
             if(this.currentSession && this.currentSession.matches.length > 0) {
                 this.history.unshift(this.currentSession);
-                this.saveData();
-                this.renderHistory();
+                this.saveData(); this.renderHistory();
             }
             document.getElementById('setup-section').style.display = 'block';
             document.getElementById('attendance-section').style.display = 'none';
@@ -446,7 +489,7 @@ const app = {
             <div class="history-card">
                 <div class="history-date">${h.date} ${h.time} (${h.group}) - 全${h.matches.length}ゲーム</div>
                 <div style="font-size: 0.9rem; color: #555;">
-                    ${h.matches.map(m => `<b>Game ${m.game}:</b> ${m.courts.map((c, i) => `[C${i+1}] ${c.join(', ')}`).join(' / ')}`).join('<br>')}
+                    ${h.matches.map(m => `<b>Game ${m.game}:</b> ${m.courts.map((c, i) => `[C${i+1}] ${c.names.join(', ')}`).join(' / ')}`).join('<br>')}
                 </div>
             </div>
         `).join('') || '<p style="color:#777;">過去の履歴はありません。</p>';
