@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Badminton Match Maker Pro v3.8</title>
+    <title>Badminton Match Maker Pro v3.9</title>
     <style>
         body { font-family: sans-serif; margin: 0; padding: 0; background-color: #f4f7f6; color: #333; }
         .header { background-color: #2c3e50; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
@@ -34,13 +34,13 @@
         .pay-done { background-color: #f1c40f; color: white; }
         .pay-wait { background-color: #ecf0f1; color: #7f8c8d; border: 1px dashed #bdc3c7; }
 
-        .court-card { border: 2px solid #3498db; padding: 10px; border-radius: 8px; margin-bottom: 15px; background-color: #f8fbfd; }
+        .court-card { border: 2px solid #3498db; padding: 10px; border-radius: 8px; margin-bottom: 15px; background-color: #f8fbfd; position: relative; }
         .team-box { background: white; padding: 5px; border-radius: 3px; border: 1px dashed #ccc; margin-bottom: 5px;}
         .score-input-area { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 10px; padding-top: 10px; border-top: 1px dotted #ccc; }
+        .edit-match-btn { position: absolute; top: 10px; right: 10px; background: #95a5a6; padding: 4px 8px; font-size: 0.8rem; }
         
         .history-card { border: 1px solid #ddd; padding: 10px; border-radius: 5px; margin-bottom: 10px; }
         .history-date { font-weight: bold; color: #3498db; margin-bottom: 5px; }
-        .checkbox-group { display: flex; flex-wrap: wrap; gap: 10px; background: #fff; padding: 10px; border: 1px solid #ccc; border-radius: 4px; max-height: 100px; overflow-y: auto;}
         
         #qr-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; flex-direction: column; }
         #qr-modal img { max-width: 80%; max-height: 60vh; background: white; padding: 10px; border-radius: 10px; margin-bottom: 20px; }
@@ -55,19 +55,13 @@
         <option value="en">🇺🇸 English</option>
         <option value="id">🇮🇩 Bahasa Indonesia</option>
         <option value="ms">🇲🇾 Bahasa Melayu</option>
-        <option value="vi">🇻🇳 Tiếng Việt</option>
-        <option value="zh">🇨🇳 简体中文</option>
-        <option value="tw">🇹🇼 繁體中文</option>
-        <option value="ko">🇰🇷 한국어</option>
-        <option value="da">🇩🇰 Dansk</option>
-        <option value="es">🇪🇸 Español</option>
-        <option value="th">🇹🇭 ภาษาไทย</option>
+        <option value="zh">🇨🇳 中文</option>
     </select>
 </div>
 <div class="tab-menu">
     <button class="tab-btn active" onclick="app.switchTab('tab-play')" data-i18n="tab_play">今日の練習</button>
     <button class="tab-btn" onclick="app.switchTab('tab-members')" data-i18n="tab_members">名簿管理</button>
-    <button class="tab-btn" onclick="app.switchTab('tab-groups')" data-i18n="tab_groups">練習会管理</button>
+    <button class="tab-btn" onclick="app.switchTab('tab-groups')" data-i18n="tab_groups">クラブ・練習会管理</button>
     <button class="tab-btn" onclick="app.switchTab('tab-history')" data-i18n="tab_history">過去の履歴</button>
 </div>
 
@@ -82,7 +76,7 @@
         <div class="section" id="setup-section">
             <h2 data-i18n="start_session">練習の開始</h2>
             <div class="controls">
-                <select id="session-group-select"></select>
+                <select id="session-group-select" style="min-width: 150px;"></select>
                 <label><span data-i18n="courts">コート数:</span> <input type="number" id="court-count" value="3" min="1" max="10" style="width: 50px;"></label>
                 <button onclick="app.initSession()" data-i18n="btn_attendance">出席を取る</button>
             </div>
@@ -93,15 +87,21 @@
                 <span><span data-i18n="attendance_mgmt">出欠・集金管理</span> (<span id="current-session-group-name"></span>)</span>
                 <button id="qr-link-btn" class="btn-pay" style="display:none; font-size: 0.8rem;" onclick="app.showQR()" data-i18n="btn_show_qr">📱 支払いQRを表示</button>
             </h2>
+            <div style="margin-bottom: 15px; background: #ecf0f1; padding: 10px; border-radius: 5px;">
+                <label style="font-size: 0.9rem;"><b data-i18n="filter_club">クラブ絞り込み:</b> 
+                    <select id="attendance-filter-club" onchange="app.renderAttendance()"></select>
+                </label>
+            </div>
             <div id="member-ui"></div>
             
             <div style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px; background: #f9f9f9; padding: 15px; border-radius: 5px;">
                 <div style="margin-bottom: 10px; font-weight: bold; color: #2c3e50;">⚙️ <span data-i18n="match_settings">組み合わせ設定</span></div>
                 <label style="display: block; margin-bottom: 10px;">
                     <span data-i18n="mode_select">モード選択:</span> 
-                    <select id="match-mode-select" style="width: 100%; max-width: 300px; padding: 10px;">
-                        <option value="mixed" data-i18n="mode_mixed">均等ミックス (強い人と弱い人を混ぜる)</option>
-                        <option value="level" data-i18n="mode_level">レベル別 (強い人同士・初級者同士で固める)</option>
+                    <select id="match-mode-select" style="width: 100%; max-width: 350px; padding: 10px;">
+                        <option value="even_power" data-i18n="mode_even">実力均等 (男女区別なし・全体を分散)</option>
+                        <option value="level_power" data-i18n="mode_level_power">レベル別 (男女区別なし・強い人同士)</option>
+                        <option value="level_mixed" data-i18n="mode_level_mixed">レベル別 (ミックス考慮・強い人同士)</option>
                     </select>
                 </label>
                 <button onclick="app.generateMatches()" style="font-size: 1.1rem; font-weight: bold; width: 100%; padding: 12px;" data-i18n="btn_generate">次の組み合わせを生成</button>
@@ -130,9 +130,8 @@
                     <option value="A">Rank A</option><option value="B">Rank B</option>
                     <option value="C" selected>Rank C</option><option value="D">Rank D</option>
                 </select>
+                <select id="new-club-select" style="max-width: 150px;"></select>
             </div>
-            <div style="margin-bottom: 5px; font-size: 0.9rem;" data-i18n="select_groups">所属する練習会を選択:</div>
-            <div class="checkbox-group" id="new-member-groups"></div>
             <button id="submit-member-btn" onclick="app.submitMember()" style="margin-top: 10px;" data-i18n="btn_add_member">メンバーを追加</button>
             <button id="cancel-edit-btn" onclick="app.resetForm()" style="margin-top: 10px; display: none; background:#95a5a6;" data-i18n="btn_cancel">キャンセル</button>
         </div>
@@ -144,9 +143,18 @@
 
     <div id="tab-groups" class="tab-content">
         <div class="section">
-            <h2 id="group-form-title" data-i18n="add_group">新しい練習会の追加</h2>
+            <h2 data-i18n="club_mgmt">所属クラブ管理 (メンバーの属性)</h2>
+            <div class="controls">
+                <input type="text" id="new-club-name" placeholder="Club Name" style="width: 150px;">
+                <button onclick="app.addClub()" data-i18n="btn_add_club">クラブを追加</button>
+            </div>
+            <div id="club-list-ui" style="margin-top: 10px;"></div>
+        </div>
+
+        <div class="section" style="border-top: 2px solid #3498db; padding-top: 20px;">
+            <h2 id="group-form-title" data-i18n="add_group">開催する練習会の管理 (開催場所・決済)</h2>
             <div class="controls" style="flex-direction: column; align-items: flex-start;">
-                <div><input type="text" id="new-group-name" placeholder="Group Name" style="width: 250px;"></div>
+                <div><input type="text" id="new-group-name" placeholder="Session Name" style="width: 250px;"></div>
                 <div style="font-size: 0.9rem; color: #555; margin-top: 5px;" data-i18n="qr_upload">決済用QRコード画像 (任意):</div>
                 <div style="display: flex; gap: 10px; align-items: center;">
                     <input type="file" id="new-group-qr" accept="image/*" style="font-size: 0.9rem;">
@@ -157,10 +165,7 @@
                     <button id="cancel-group-edit-btn" onclick="app.resetGroupForm()" style="display: none; background:#95a5a6;" data-i18n="btn_cancel">キャンセル</button>
                 </div>
             </div>
-        </div>
-        <div class="section">
-            <h2 data-i18n="group_list">登録済みの練習会</h2>
-            <div id="group-list-ui"></div>
+            <div id="group-list-ui" style="margin-top: 15px;"></div>
         </div>
     </div>
 
@@ -174,44 +179,48 @@
 </div>
 
 <script>
-// --- i18n 多言語辞書 ---
 const dict = {
     ja: {
-        tab_play: "今日の練習", tab_members: "名簿管理", tab_groups: "練習会管理", tab_history: "過去の履歴",
+        tab_play: "今日の練習", tab_members: "名簿管理", tab_groups: "クラブ・練習会管理", tab_history: "過去の履歴",
         start_session: "練習の開始", courts: "コート数:", btn_attendance: "出席を取る",
-        attendance_mgmt: "出欠・集金管理", btn_show_qr: "📱 支払いQRを表示",
+        attendance_mgmt: "出欠・集金管理", btn_show_qr: "📱 支払いQRを表示", filter_club: "クラブ絞り込み:",
         match_settings: "組み合わせ設定", mode_select: "モード選択:",
-        mode_mixed: "均等ミックス (強い人と弱い人を混ぜる)", mode_level: "レベル別 (強い人同士・初級者同士で固める)",
+        mode_even: "実力均等 (男女区別なし・全体を分散)", mode_level_power: "レベル別 (男女区別なし・強い人同士)", mode_level_mixed: "レベル別 (ミックス考慮・強い人同士)",
         btn_generate: "次の組み合わせを生成", current_games: "進行中のゲーム", btn_end_session: "練習を終了して記録を保存",
-        reg_member: "新規メンバー登録", edit_member: "メンバー情報の編集", male: "男性", female: "女性",
-        select_groups: "所属する練習会を選択:", btn_add_member: "メンバーを追加", btn_update: "情報を更新する", btn_cancel: "キャンセル",
-        member_list: "登録メンバー一覧", add_group: "新しい練習会の追加", edit_group: "練習会情報の編集", qr_upload: "決済用QRコード画像 (任意):",
-        btn_add_group: "練習会を追加", group_list: "登録済みの練習会", history_title: "練習会履歴", btn_close: "閉じる",
+        reg_member: "新規メンバー登録", edit_member: "メンバー情報の編集", male: "男性", female: "女性", club_none: "所属なし",
+        btn_add_member: "メンバーを追加", btn_update: "情報を更新する", btn_cancel: "キャンセル",
+        member_list: "登録メンバー一覧", club_mgmt: "所属クラブ管理", btn_add_club: "クラブを追加",
+        add_group: "開催する練習会の管理", edit_group: "練習会情報の編集", qr_upload: "決済用QRコード画像 (任意):",
+        btn_add_group: "練習会を追加", history_title: "練習会履歴", btn_close: "閉じる",
         status_present: "出席", status_absent: "休み", pay_done: "集金済", pay_wait: "未納",
-        play_count: "試合数", no_members: "メンバーがいません", no_groups: "練習会が登録されていません", no_history: "過去の履歴はありません",
-        btn_edit: "編集", btn_delete: "削除", court: "コート", register_score: "結果登録", registered: "✓ スコア登録完了"
+        play_count: "試合数", no_members: "メンバーがいません", no_groups: "データがありません",
+        btn_edit: "編集", btn_delete: "削除", court: "コート", register_score: "結果登録", registered: "✓ スコア登録完了",
+        edit_players: "✍️ メンバー変更", save_players: "💾 変更を確定", all_clubs: "すべて表示"
     },
     en: {
-        tab_play: "Today's Session", tab_members: "Members", tab_groups: "Groups", tab_history: "History",
+        tab_play: "Today's Session", tab_members: "Members", tab_groups: "Clubs/Sessions", tab_history: "History",
         start_session: "Start Session", courts: "Courts:", btn_attendance: "Take Attendance",
-        attendance_mgmt: "Attendance & Payment", btn_show_qr: "📱 Show Payment QR",
+        attendance_mgmt: "Attendance & Payment", btn_show_qr: "📱 Show QR", filter_club: "Filter by Club:",
         match_settings: "Match Settings", mode_select: "Mode:",
-        mode_mixed: "Mixed (Balance Skill Levels)", mode_level: "Tiered (Group Similar Levels)",
-        btn_generate: "Generate Next Matches", current_games: "Current Games", btn_end_session: "End Session & Save",
-        reg_member: "Register Member", edit_member: "Edit Member", male: "Male", female: "Female",
-        select_groups: "Select Groups:", btn_add_member: "Add Member", btn_update: "Update Info", btn_cancel: "Cancel",
-        member_list: "Registered Members", add_group: "Add New Group", edit_group: "Edit Group Info", qr_upload: "Payment QR Code (Optional):",
-        btn_add_group: "Add Group", group_list: "Registered Groups", history_title: "Session History", btn_close: "Close",
+        mode_even: "Even Power (Ignore Gender / Dispersed)", mode_level_power: "Level-based (Ignore Gender)", mode_level_mixed: "Level-based (Prioritize Mixed)",
+        btn_generate: "Generate Matches", current_games: "Current Games", btn_end_session: "End Session & Save",
+        reg_member: "Register Member", edit_member: "Edit Member", male: "Male", female: "Female", club_none: "No Club",
+        btn_add_member: "Add Member", btn_update: "Update Info", btn_cancel: "Cancel",
+        member_list: "Member List", club_mgmt: "Club Management", btn_add_club: "Add Club",
+        add_group: "Session Management", edit_group: "Edit Session Info", qr_upload: "Payment QR (Optional):",
+        btn_add_group: "Add Session", history_title: "Session History", btn_close: "Close",
         status_present: "Present", status_absent: "Rest", pay_done: "Paid", pay_wait: "Unpaid",
-        play_count: "Games", no_members: "No members found.", no_groups: "No groups registered.", no_history: "No history available.",
-        btn_edit: "Edit", btn_delete: "Delete", court: "Court", register_score: "Submit Score", registered: "✓ Score Registered"
+        play_count: "Games", no_members: "No members found.", no_groups: "No data.",
+        btn_edit: "Edit", btn_delete: "Delete", court: "Court", register_score: "Submit Score", registered: "✓ Score Saved",
+        edit_players: "✍️ Edit Players", save_players: "💾 Save Changes", all_clubs: "Show All"
     }
 };
 
 const app = {
     lang: 'ja',
-    members: [], groups: [], history: [], currentSession: null,
+    members: [], clubs: [], groups: [], history: [], currentSession: null,
     editingMemberId: null, editingGroupName: null, tempQrData: '',
+    isEditingMatch: false,
     K_FACTOR: 32,
     rankToRating: { 'A': 1600, 'B': 1500, 'C': 1400, 'D': 1300 },
     ratingToRank: { 1600: 'A', 1500: 'B', 1400: 'C', 1300: 'D' },
@@ -223,14 +232,10 @@ const app = {
     },
 
     changeLang(newLang) {
-        this.lang = newLang;
-        localStorage.setItem('bm_lang', newLang);
-        document.querySelectorAll('[data-i18n]').forEach(el => {
-            const key = el.getAttribute('data-i18n');
-            el.innerText = this.t(key);
-        });
+        this.lang = newLang; localStorage.setItem('bm_lang', newLang);
+        document.querySelectorAll('[data-i18n]').forEach(el => { el.innerText = this.t(el.getAttribute('data-i18n')); });
         this.renderAll();
-        if(this.currentSession) { this.renderAttendance(); }
+        if(this.currentSession) { this.renderAttendance(); this.renderMatches(); }
     },
 
     getRank(rating) {
@@ -240,28 +245,37 @@ const app = {
 
     init() {
         const savedLang = localStorage.getItem('bm_lang');
-        if (savedLang) {
-            this.lang = savedLang;
-            document.getElementById('lang-select').value = savedLang;
-        }
+        if (savedLang) { this.lang = savedLang; document.getElementById('lang-select').value = savedLang; }
         this.changeLang(this.lang); 
 
-        const savedMembers = localStorage.getItem('bm_members_v3');
-        const savedGroups = localStorage.getItem('bm_groups_v3');
-        const savedHistory = localStorage.getItem('bm_history_v3');
+        const savedMembers = localStorage.getItem('bm_members_v4');
+        const savedClubs = localStorage.getItem('bm_clubs_v4');
+        const savedGroups = localStorage.getItem('bm_groups_v4');
+        const savedHistory = localStorage.getItem('bm_history_v4');
         
-        if (savedMembers) this.members = JSON.parse(savedMembers);
-        if (savedHistory) this.history = JSON.parse(savedHistory);
-        if (savedGroups) this.groups = JSON.parse(savedGroups).map(g => typeof g === 'string' ? { name: g, qrData: '' } : g);
+        // v3からのマイグレーション
+        if (!savedMembers && localStorage.getItem('bm_members_v3')) {
+            this.members = JSON.parse(localStorage.getItem('bm_members_v3'));
+            let extractedClubs = new Set();
+            this.members.forEach(m => {
+                if(m.groups && m.groups.length > 0) { m.club = m.groups[0]; extractedClubs.add(m.club); } else { m.club = ''; }
+                delete m.groups;
+            });
+            this.clubs = Array.from(extractedClubs);
+            this.groups = JSON.parse(localStorage.getItem('bm_groups_v3') || '[]').map(g => typeof g === 'string' ? {name: g, qrData: ''} : g);
+            this.history = JSON.parse(localStorage.getItem('bm_history_v3') || '[]');
+            this.saveData(); // 新形式で保存
+        } else {
+            if (savedMembers) this.members = JSON.parse(savedMembers);
+            if (savedClubs) this.clubs = JSON.parse(savedClubs);
+            if (savedGroups) this.groups = JSON.parse(savedGroups);
+            if (savedHistory) this.history = JSON.parse(savedHistory);
+        }
 
-        this.members.forEach(m => {
-            if (!m.groups) m.groups = m.group ? [m.group] : [];
-            if (!m.rating) m.rating = 1400; 
-        });
+        this.members.forEach(m => { if (!m.rating) m.rating = 1400; if(!m.club) m.club = ''; });
 
         document.getElementById('new-group-qr').addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
+            const file = e.target.files[0]; if (!file) return;
             const reader = new FileReader();
             reader.onload = (ev) => {
                 const img = new Image();
@@ -272,8 +286,7 @@ const app = {
                     canvas.width = w; canvas.height = h;
                     canvas.getContext('2d').drawImage(img, 0, 0, w, h);
                     app.tempQrData = canvas.toDataURL('image/jpeg', 0.8);
-                    document.getElementById('qr-preview').src = app.tempQrData;
-                    document.getElementById('qr-preview').style.display = 'block';
+                    document.getElementById('qr-preview').src = app.tempQrData; document.getElementById('qr-preview').style.display = 'block';
                 };
                 img.src = ev.target.result;
             };
@@ -284,16 +297,18 @@ const app = {
     },
 
     saveData() {
-        localStorage.setItem('bm_members_v3', JSON.stringify(this.members));
-        localStorage.setItem('bm_groups_v3', JSON.stringify(this.groups));
-        localStorage.setItem('bm_history_v3', JSON.stringify(this.history));
+        localStorage.setItem('bm_members_v4', JSON.stringify(this.members));
+        localStorage.setItem('bm_clubs_v4', JSON.stringify(this.clubs));
+        localStorage.setItem('bm_groups_v4', JSON.stringify(this.groups));
+        localStorage.setItem('bm_history_v4', JSON.stringify(this.history));
     },
 
     renderAll() {
+        this.renderClubs();
         this.renderGroups();
         this.renderDatabase();
         this.renderHistory();
-        this.updateGroupSelects();
+        this.updateSelects();
     },
 
     switchTab(tabId) {
@@ -304,31 +319,49 @@ const app = {
         if(activeBtn) activeBtn.classList.add('active');
     },
 
-    // --- グループ管理 ---
+    // --- クラブ管理 ---
+    addClub() {
+        const name = document.getElementById('new-club-name').value.trim();
+        if (!name || this.clubs.includes(name)) return;
+        this.clubs.push(name);
+        document.getElementById('new-club-name').value = '';
+        this.saveData(); this.renderAll();
+    },
+    deleteClub(name) {
+        if(confirm(`Delete ${name}?`)) {
+            this.clubs = this.clubs.filter(c => c !== name);
+            this.members.forEach(m => { if(m.club === name) m.club = ''; });
+            this.saveData(); this.renderAll();
+        }
+    },
+    renderClubs() {
+        const ui = document.getElementById('club-list-ui');
+        ui.innerHTML = this.clubs.map(c => `
+            <div style="border-bottom: 1px solid #eee; padding: 5px 0; display: flex; justify-content: space-between;">
+                <span>${c}</span> <button class="btn-danger" style="padding: 2px 5px; font-size: 0.8rem;" onclick="app.deleteClub('${c}')">${this.t('btn_delete')}</button>
+            </div>
+        `).join('') || `<p style="color:#777;">${this.t('no_groups')}</p>`;
+    },
+
+    // --- 練習会(Group)管理 ---
     submitGroup() {
         const name = document.getElementById('new-group-name').value.trim();
         if (!name) return;
-
         if (this.editingGroupName) {
             const g = this.groups.find(x => x.name === this.editingGroupName);
-            if (g) {
-                if (g.name !== name) this.members.forEach(m => { const idx = m.groups.indexOf(g.name); if (idx !== -1) m.groups[idx] = name; });
-                g.name = name; if (this.tempQrData) g.qrData = this.tempQrData;
-            }
+            if (g) { g.name = name; if (this.tempQrData) g.qrData = this.tempQrData; }
         } else {
             if (this.groups.some(g => g.name === name)) return;
             this.groups.push({ name: name, qrData: this.tempQrData });
         }
         this.resetGroupForm(); this.saveData(); this.renderAll();
     },
-
     editGroup(groupName) {
         const g = this.groups.find(x => x.name === groupName);
         if (!g) return;
         this.editingGroupName = groupName;
         document.getElementById('group-form-title').innerText = this.t('edit_group');
         document.getElementById('new-group-name').value = g.name;
-        
         this.tempQrData = g.qrData || '';
         if (this.tempQrData) { document.getElementById('qr-preview').src = this.tempQrData; document.getElementById('qr-preview').style.display = 'block'; } 
         else { document.getElementById('qr-preview').style.display = 'none'; }
@@ -338,32 +371,27 @@ const app = {
         document.getElementById('cancel-group-edit-btn').style.display = 'inline-block';
         window.scrollTo({ top: 0, behavior: 'smooth' });
     },
-
     resetGroupForm() {
         this.editingGroupName = null; this.tempQrData = '';
         document.getElementById('group-form-title').innerText = this.t('add_group');
         document.getElementById('new-group-name').value = ''; document.getElementById('new-group-qr').value = '';
         document.getElementById('qr-preview').style.display = 'none';
-        
         const btn = document.getElementById('submit-group-btn');
         btn.innerText = this.t('btn_add_group'); btn.classList.remove('btn-edit');
         document.getElementById('cancel-group-edit-btn').style.display = 'none';
     },
-
     deleteGroup(groupName) {
         if(confirm(`Delete ${groupName}?`)) {
             this.groups = this.groups.filter(g => g.name !== groupName);
-            this.members.forEach(m => { m.groups = m.groups.filter(g => g !== groupName); });
             this.saveData(); this.renderAll();
         }
     },
-
     renderGroups() {
         const ui = document.getElementById('group-list-ui');
         ui.innerHTML = this.groups.map(g => `
             <div style="border-bottom: 1px solid #eee; padding: 10px 0; display: flex; justify-content: space-between; align-items: center;">
                 <div style="display:flex; align-items:center; gap: 10px;">
-                    ${g.qrData ? `<img src="${g.qrData}" style="height:40px; border-radius:4px; border:1px solid #ddd;">` : `<div style="width:40px;height:40px;background:#eee;border-radius:4px;font-size:0.6rem;display:flex;align-items:center;justify-content:center;color:#999;">No QR</div>`}
+                    ${g.qrData ? `<img src="${g.qrData}" style="height:30px; border-radius:4px; border:1px solid #ddd;">` : `<div style="width:30px;height:30px;background:#eee;border-radius:4px;font-size:0.5rem;display:flex;align-items:center;justify-content:center;color:#999;">No QR</div>`}
                     <div><b>${g.name}</b></div>
                 </div>
                 <div style="display: flex; gap: 5px;">
@@ -374,28 +402,35 @@ const app = {
         `).join('') || `<p style="color:#777;">${this.t('no_groups')}</p>`;
     },
 
-    // --- 名簿管理 ---
-    updateGroupSelects() {
+    // --- 共通セレクトボックス更新 ---
+    updateSelects() {
+        // クラブ選択（名簿登録用）
+        const clubSelect = document.getElementById('new-club-select');
+        clubSelect.innerHTML = `<option value="">-- ${this.t('club_none')} --</option>` + this.clubs.map(c => `<option value="${c}">${c}</option>`).join('');
+        
+        // 出欠フィルター用
+        const filterSelect = document.getElementById('attendance-filter-club');
+        filterSelect.innerHTML = `<option value="">-- ${this.t('all_clubs')} --</option>` + this.clubs.map(c => `<option value="${c}">${c}</option>`).join('');
+
+        // 練習会選択（セッション開始用）
         const playSelect = document.getElementById('session-group-select');
         playSelect.innerHTML = this.groups.length > 0 ? '' : `<option value="">--</option>`;
         this.groups.forEach(g => { playSelect.innerHTML += `<option value="${g.name}">${g.name}</option>`; });
-        const memberGroupsUi = document.getElementById('new-member-groups');
-        memberGroupsUi.innerHTML = this.groups.map(g => `
-            <label><input type="checkbox" value="${g.name}" class="new-member-group-chk"> ${g.name}</label>
-        `).join('') || '';
     },
+
+    // --- 名簿管理 ---
     submitMember() {
         const name = document.getElementById('new-name').value.trim();
         const gender = document.getElementById('new-gender').value;
         const rank = document.getElementById('new-rank').value;
-        const checkedGroups = Array.from(document.querySelectorAll('.new-member-group-chk:checked')).map(cb => cb.value);
+        const club = document.getElementById('new-club-select').value;
         if (!name) return;
 
         if (this.editingMemberId) {
             const m = this.members.find(x => x.id === this.editingMemberId);
-            if (m) { m.name = name; m.gender = gender; m.rating = this.rankToRating[rank]; m.groups = checkedGroups; }
+            if (m) { m.name = name; m.gender = gender; m.rating = this.rankToRating[rank]; m.club = club; }
         } else {
-            this.members.push({ id: Date.now(), name, gender, groups: checkedGroups, rating: this.rankToRating[rank], active: false, playCount: 0 });
+            this.members.push({ id: Date.now(), name, gender, club: club, rating: this.rankToRating[rank], active: false, playCount: 0 });
         }
         this.resetForm(); this.saveData(); this.renderDatabase();
     },
@@ -403,221 +438,5 @@ const app = {
         const m = this.members.find(x => x.id === id);
         if (!m) return;
         this.editingMemberId = id;
-        document.getElementById('form-title').innerText = this.t('edit_member');
-        document.getElementById('new-name').value = m.name; document.getElementById('new-gender').value = m.gender;
-        document.getElementById('new-rank').value = this.ratingToRank[m.rating] || this.getRank(m.rating);
-        document.querySelectorAll('.new-member-group-chk').forEach(cb => { cb.checked = m.groups.includes(cb.value); });
-        
-        const submitBtn = document.getElementById('submit-member-btn');
-        submitBtn.innerText = this.t('btn_update'); submitBtn.classList.add('btn-edit');
-        document.getElementById('cancel-edit-btn').style.display = 'inline-block';
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    },
-    resetForm() {
-        this.editingMemberId = null;
-        document.getElementById('form-title').innerText = this.t('reg_member');
-        document.getElementById('new-name').value = ''; document.getElementById('new-rank').value = 'C';
-        document.querySelectorAll('.new-member-group-chk').forEach(cb => cb.checked = false);
-        const submitBtn = document.getElementById('submit-member-btn');
-        submitBtn.innerText = this.t('btn_add_member'); submitBtn.classList.remove('btn-edit');
-        document.getElementById('cancel-edit-btn').style.display = 'none';
-    },
-    deleteMember(id) {
-        if(confirm('Delete?')) { this.members = this.members.filter(m => m.id !== id); this.saveData(); this.renderDatabase(); }
-    },
-    renderDatabase() {
-        const ui = document.getElementById('member-database-ui');
-        ui.innerHTML = this.members.map(m => `
-            <div style="border-bottom: 1px solid #eee; padding: 10px 0; display: flex; justify-content: space-between; align-items: center;">
-                <div><b>${m.name}</b> (${m.gender}, Rank: ${this.getRank(m.rating)}, Rate: ${Math.round(m.rating)})<br><small style="color: #666;">Grp: ${m.groups.length > 0 ? m.groups.join(', ') : '-'}</small></div>
-                <div style="display: flex; gap: 5px;">
-                    <button class="btn-edit" style="padding: 5px 10px;" onclick="app.editMember(${m.id})">${this.t('btn_edit')}</button>
-                    <button class="btn-danger" style="padding: 5px 10px;" onclick="app.deleteMember(${m.id})">${this.t('btn_delete')}</button>
-                </div>
-            </div>
-        `).join('') || `<p>${this.t('no_members')}</p>`;
-    },
-
-    // --- 今日の練習（セッション） ---
-    initSession() {
-        const targetGroupName = document.getElementById('session-group-select').value;
-        if (!targetGroupName) return;
-        const targetGroupObj = this.groups.find(g => g.name === targetGroupName);
-        const courts = parseInt(document.getElementById('court-count').value);
-        let targetMembers = this.members.filter(m => m.groups.includes(targetGroupName));
-        
-        this.members.forEach(m => { m.active = false; m.playCount = 0; });
-        targetMembers.forEach(m => m.active = true);
-
-        const now = new Date();
-        this.currentSession = {
-            date: now.toLocaleDateString(), time: now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-            group: targetGroupName, qrData: targetGroupObj ? targetGroupObj.qrData : '',
-            courts: courts, gameCount: 1, matches: [], payments: {} 
-        };
-
-        document.getElementById('current-session-group-name').innerText = targetGroupName;
-        document.getElementById('qr-link-btn').style.display = this.currentSession.qrData ? 'inline-block' : 'none';
-        document.getElementById('setup-section').style.display = 'none';
-        document.getElementById('attendance-section').style.display = 'block';
-        document.getElementById('match-section').style.display = 'block';
-        this.renderAttendance();
-    },
-
-    showQR() {
-        if(this.currentSession && this.currentSession.qrData) {
-            document.getElementById('qr-modal-img').src = this.currentSession.qrData;
-            document.getElementById('qr-modal').style.display = 'flex';
-        }
-    },
-
-    // --- 遅刻者補正ロジック ---
-    toggleStatus(id) {
-        const m = this.members.find(m => m.id === id);
-        if (m) { 
-            const isJoining = !m.active;
-            m.active = isJoining; 
+        document.getElementById('form-title').
             
-            if (isJoining && this.currentSession && this.currentSession.gameCount > 1) {
-                const activeMembers = this.members.filter(x => x.active && x.id !== id);
-                if (activeMembers.length > 0) {
-                    const minPlayCount = Math.min(...activeMembers.map(x => x.playCount));
-                    if (m.playCount < minPlayCount) {
-                        m.playCount = minPlayCount;
-                    }
-                }
-            }
-            this.renderAttendance(); 
-        }
-    },
-    
-    togglePayment(id) {
-        if(this.currentSession) { this.currentSession.payments[id] = !this.currentSession.payments[id]; this.renderAttendance(); }
-    },
-
-    renderAttendance() {
-        const ui = document.getElementById('member-ui');
-        const sessionMembers = this.members.filter(m => m.groups.includes(this.currentSession.group));
-        ui.innerHTML = sessionMembers.map(m => `
-            <div class="member-card">
-                <div style="font-weight: bold; font-size: 1.05rem; margin-bottom: 5px;">${m.name} <span style="font-size:0.8rem; color:#888;">(${this.getRank(m.rating)})</span></div>
-                <div style="font-size: 0.8rem; color: #666; margin-bottom: 8px;">${this.t('play_count')}: ${m.playCount}</div>
-                <button class="status-btn ${m.active ? 'status-active' : 'status-inactive'}" onclick="app.toggleStatus(${m.id})">${m.active ? this.t('status_present') : this.t('status_absent')}</button>
-                ${m.active ? `<button class="status-btn ${this.currentSession.payments[m.id] ? 'pay-done' : 'pay-wait'}" onclick="app.togglePayment(${m.id})">${this.currentSession.payments[m.id] ? this.t('pay_done') : this.t('pay_wait')}</button>` : ''}
-            </div>
-        `).join('');
-    },
-
-    shuffleArray(array) {
-        for (let i = array.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [array[i], array[j]] = [array[j], array[i]]; }
-        return array;
-    },
-
-    generateMatches() {
-        if(!this.currentSession) return;
-        const activeMembers = this.members.filter(m => m.active);
-        const needed = this.currentSession.courts * 4;
-        if (activeMembers.length < needed) return alert('Not enough players');
-
-        let selected = [...activeMembers].sort((a, b) => a.playCount - b.playCount).slice(0, needed);
-        selected.forEach(p => { const m = this.members.find(x => x.id === p.id); if(m) m.playCount++; });
-        selected.sort((a, b) => b.rating - a.rating);
-
-        const mode = document.getElementById('match-mode-select').value;
-        const ui = document.getElementById('courts-ui');
-        ui.innerHTML = '';
-        let currentMatchRecord = { game: this.currentSession.gameCount, courts: [] };
-
-        for (let i = 0; i < this.currentSession.courts; i++) {
-            let players;
-            if (mode === 'level') {
-                players = [ selected[i * 4], selected[i * 4 + 1], selected[i * 4 + 2], selected[i * 4 + 3] ];
-                players = this.shuffleArray(players);
-            } else {
-                players = [ selected[i], selected[i + this.currentSession.courts], selected[i + this.currentSession.courts * 2], selected[i + this.currentSession.courts * 3] ];
-                players = this.shuffleArray(players);
-            }
-            currentMatchRecord.courts.push({ team1: [players[0].id, players[1].id], team2: [players[2].id, players[3].id], names: players.map(p => p.name) });
-            
-            ui.innerHTML += `
-                <div class="court-card" id="court-card-${i}">
-                    <h3 style="margin-top:0;">${this.t('court')} ${i + 1}</h3>
-                    <div class="team-box"><b>Team 1:</b> ${players[0].name} & ${players[1].name}</div>
-                    <div style="text-align:center; font-size:0.8rem; color:#888;">VS</div>
-                    <div class="team-box"><b>Team 2:</b> ${players[2].name} & ${players[3].name}</div>
-                    <div class="score-input-area" id="score-area-${i}">
-                        <input type="number" id="score_t1_${i}" placeholder="T1" style="width: 50px;"> - 
-                        <input type="number" id="score_t2_${i}" placeholder="T2" style="width: 50px;">
-                        <button class="btn-success" onclick="app.registerScore(${i})">${this.t('register_score')}</button>
-                    </div>
-                </div>
-            `;
-        }
-        this.currentSession.matches.push(currentMatchRecord);
-        this.renderAttendance();
-        document.getElementById('game-number').innerText = this.currentSession.gameCount++;
-    },
-
-    registerScore(courtIndex) {
-        const score1 = parseInt(document.getElementById(`score_t1_${courtIndex}`).value);
-        const score2 = parseInt(document.getElementById(`score_t2_${courtIndex}`).value);
-        if (isNaN(score1) || isNaN(score2)) return;
-
-        const matchRecord = this.currentSession.matches[this.currentSession.matches.length - 1];
-        const courtData = matchRecord.courts[courtIndex];
-        const t1_p1 = this.members.find(m => m.id === courtData.team1[0]); const t1_p2 = this.members.find(m => m.id === courtData.team1[1]);
-        const t2_p1 = this.members.find(m => m.id === courtData.team2[0]); const t2_p2 = this.members.find(m => m.id === courtData.team2[1]);
-        if(!t1_p1 || !t1_p2 || !t2_p1 || !t2_p2) return;
-
-        const r1 = (t1_p1.rating + t1_p2.rating) / 2; const r2 = (t2_p1.rating + t2_p2.rating) / 2;
-        const expected1 = 1 / (1 + Math.pow(10, (r2 - r1) / 400)); const expected2 = 1 / (1 + Math.pow(10, (r1 - r2) / 400));
-        
-        let actual1, actual2;
-        const pointDiff = Math.abs(score1 - score2);
-        const marginMultiplier = Math.log(pointDiff + 1) * 0.5 + 0.5; 
-
-        if (score1 > score2) { actual1 = 1; actual2 = 0; } 
-        else if (score1 < score2) { actual1 = 0; actual2 = 1; } 
-        else { actual1 = 0.5; actual2 = 0.5; }
-
-        const delta1 = this.K_FACTOR * marginMultiplier * (actual1 - expected1);
-        const delta2 = this.K_FACTOR * marginMultiplier * (actual2 - expected2);
-
-        t1_p1.rating += delta1; t1_p2.rating += delta1;
-        t2_p1.rating += delta2; t2_p2.rating += delta2;
-
-        this.saveData(); this.renderAttendance(); 
-        document.getElementById(`score-area-${courtIndex}`).innerHTML = `<span style="color:#2ecc71; font-weight:bold;">${this.t('registered')}</span>`;
-    },
-
-    endSession() {
-        if(confirm('End Session?')) {
-            if(this.currentSession && this.currentSession.matches.length > 0) {
-                this.history.unshift(this.currentSession);
-                this.saveData(); this.renderHistory();
-            }
-            document.getElementById('setup-section').style.display = 'block';
-            document.getElementById('attendance-section').style.display = 'none';
-            document.getElementById('match-section').style.display = 'none';
-            this.currentSession = null;
-            this.switchTab('tab-history');
-        }
-    },
-
-    renderHistory() {
-        const ui = document.getElementById('history-ui');
-        ui.innerHTML = this.history.map(h => `
-            <div class="history-card">
-                <div class="history-date">${h.date} ${h.time} (${h.group}) - ${h.matches.length} Games</div>
-                <div style="font-size: 0.9rem; color: #555;">
-                    ${h.matches.map(m => `<b>Game ${m.game}:</b> ${m.courts.map((c, i) => `[C${i+1}] ${c.names.join(', ')}`).join(' / ')}`).join('<br>')}
-                </div>
-            </div>
-        `).join('') || `<p style="color:#777;">${this.t('no_history')}</p>`;
-    }
-};
-
-window.onload = () => app.init();
-</script>
-</body>
-</html>
