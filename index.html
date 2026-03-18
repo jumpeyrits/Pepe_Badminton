@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Badminton Match Maker Pro v4.1</title>
+    <title>Badminton Match Maker Pro v4.2</title>
     <style>
         body { font-family: sans-serif; margin: 0; padding: 0; background-color: #f4f7f6; color: #333; }
         .header { background-color: #2c3e50; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
-        .header-title { font-size: 1.2rem; font-weight: bold; }
+        .header-title { font-size: 1.2rem; font-weight: bold; display: flex; align-items: center; gap: 10px; }
         .lang-select { padding: 5px; border-radius: 4px; border: none; font-size: 0.9rem; background: #34495e; color: white; cursor: pointer; }
+        .info-btn { background: none; border: 1px solid white; color: white; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; }
         .tab-menu { display: flex; background-color: #34495e; overflow-x: auto; }
         .tab-btn { flex: 1; min-width: 100px; padding: 12px 0; background: none; border: none; color: white; cursor: pointer; font-size: 1rem; }
         .tab-btn.active { background-color: #3498db; font-weight: bold; }
@@ -46,22 +47,69 @@
         .score-box { font-weight: bold; background: #34495e; color: white; padding: 2px 8px; border-radius: 10px; }
         .synergy-box { background: #e8f4f8; padding: 15px; border-radius: 8px; border: 1px solid #bce0ee; margin-bottom: 15px; }
         
-        #qr-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; flex-direction: column; }
-        #qr-modal img { max-width: 80%; max-height: 60vh; background: white; padding: 10px; border-radius: 10px; margin-bottom: 20px; }
+        /* モーダル共通CSS */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 25px; border-radius: 10px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; position: relative; }
+        .modal-close-btn { position: absolute; top: 15px; right: 20px; font-size: 1.5rem; cursor: pointer; border: none; background: none; color: #7f8c8d; }
         
-        /* 翻訳除外用クラスの念押し設定 */
+        /* 翻訳除外用 */
         .notranslate { white-space: nowrap; }
     </style>
 </head>
 <body>
 
+<div id="manual-modal" class="modal-overlay">
+    <div class="modal-content">
+        <button class="modal-close-btn" onclick="document.getElementById('manual-modal').style.display='none'">×</button>
+        <h2 style="border-bottom:none; color:#3498db; margin-top:0;" data-i18n="manual_title">📖 アプリケーション・マニュアル</h2>
+        
+        <div style="background: #fdfdfd; padding: 15px; border-left: 4px solid #3498db; margin-bottom: 20px;">
+            <strong data-i18n="manual_intro_title">【Badminton Match Maker Pro とは】</strong><br>
+            <p style="font-size: 0.95rem; line-height: 1.6;" data-i18n="manual_intro_text">
+                本アプリは、スポーツコミュニティ運営における「実力差の不均衡」と「休み回数の不平等」を全自動で解決する次世代のインフラツールです。独自のイロレーティング・エンジンとシナジー（相性）解析機能により、メンバーの成長を可視化し、常に最適で熱狂的なマッチアップを提供します。
+            </p>
+        </div>
+
+        <h3 style="font-size: 1rem; color:#2c3e50;" data-i18n="manual_how_title">⚙️ 基本的な使い方</h3>
+        <ol style="font-size: 0.9rem; line-height: 1.6; padding-left: 20px;">
+            <li data-i18n="manual_step1"><strong>クラブ・練習会の登録:</strong> 「クラブ・練習会管理」タブで、所属クラブや開催場所（集金QR含む）を登録します。</li>
+            <li data-i18n="manual_step2"><strong>メンバーの登録:</strong> 「名簿管理」でメンバーを追加します。初期ランク（A〜D）を設定できます。</li>
+            <li data-i18n="manual_step3"><strong>練習の開始:</strong> 「今日の練習」タブで練習会とコート数を選び、「出席を取る」を押します。</li>
+            <li data-i18n="manual_step4"><strong>出欠と組み合わせ:</strong> メンバーの出欠をタップで切り替え、「モード（均等・レベル別）」を選んで組み合わせを生成します。</li>
+            <li data-i18n="manual_step5"><strong>スコア入力と学習:</strong> 試合後、得点を入力して「結果登録」を押すと、AIが個人の実力とペアの相性を学習し、内部レーティングを自動調整します。</li>
+        </ol>
+
+        <div style="margin-top: 30px; font-size: 0.8rem; color: #7f8c8d; border-top: 1px solid #eee; padding-top: 10px; text-align: center;">
+            <span translate="no" class="notranslate">&copy; 2026 Pepe (Badminton Match Maker Pro Project). All rights reserved.</span><br>
+            <span data-i18n="manual_copyright">無断複写・転載を禁じます。</span>
+        </div>
+    </div>
+</div>
+
+<div id="qr-modal" class="modal-overlay">
+    <div style="display:flex; flex-direction:column; align-items:center;">
+        <img id="qr-modal-img" src="" alt="QR Code" style="max-width: 80%; max-height: 60vh; background: white; padding: 10px; border-radius: 10px; margin-bottom: 20px;">
+        <button onclick="document.getElementById('qr-modal').style.display='none'" style="font-size: 1.2rem; padding: 10px 30px;" data-i18n="btn_close">閉じる</button>
+    </div>
+</div>
+
 <div class="header">
-    <div class="header-title">🏸 Badminton Match Maker Pro</div>
+    <div class="header-title">
+        🏸 Badminton Match Maker Pro 
+        <button class="info-btn" onclick="document.getElementById('manual-modal').style.display='flex'" title="Manual">ℹ️</button>
+    </div>
     <select id="lang-select" class="lang-select" onchange="app.changeLang(this.value)">
         <option value="ja">🇯🇵 日本語</option>
         <option value="en">🇺🇸 English</option>
-        <option value="zh">🇨🇳 中文</option>
-        <option value="id">🇮🇩 Bahasa Indonesia</option>
+        <option value="zh-CN">🇨🇳 简体中文</option>
+        <option value="zh-TW">🇹🇼 繁體中文</option>
+        <option value="ms">🇲🇾 B. Melayu</option>
+        <option value="id">🇮🇩 B. Indonesia</option>
+        <option value="ko">🇰🇷 한국어</option>
+        <option value="es">🇪🇸 Español</option>
+        <option value="da">🇩🇰 Dansk</option>
+        <option value="fr">🇫🇷 Français</option>
+        <option value="de">🇩🇪 Deutsch</option>
     </select>
 </div>
 <div class="tab-menu">
@@ -69,11 +117,6 @@
     <button class="tab-btn" onclick="app.switchTab('tab-members')" data-i18n="tab_members">名簿管理</button>
     <button class="tab-btn" onclick="app.switchTab('tab-groups')" data-i18n="tab_groups">クラブ・練習会管理</button>
     <button class="tab-btn" onclick="app.switchTab('tab-history')" data-i18n="tab_history">過去の履歴</button>
-</div>
-
-<div id="qr-modal">
-    <img id="qr-modal-img" src="" alt="QR Code">
-    <button onclick="document.getElementById('qr-modal').style.display='none'" style="font-size: 1.2rem; padding: 10px 30px;" data-i18n="btn_close">閉じる</button>
 </div>
 
 <div class="container">
@@ -191,80 +234,33 @@
 </div>
 
 <script>
-// --- i18n 多言語辞書 ---
+// --- 11カ国語辞書 ---
 const dict = {
     ja: {
-        tab_play: "今日の練習", tab_members: "名簿管理", tab_groups: "クラブ・練習会管理", tab_history: "過去の履歴",
-        start_session: "練習の開始", courts: "コート数:", btn_attendance: "出席を取る",
-        attendance_mgmt: "出欠・集金管理", btn_show_qr: "📱 支払いQRを表示", filter_club: "クラブ絞り込み:",
-        match_settings: "組み合わせ設定", mode_select: "モード選択:",
-        mode_even: "実力均等 (男女区別なし・全体を分散)", mode_level_power: "レベル別 (男女区別なし・強い人同士)", mode_level_mixed: "レベル別 (ミックス考慮・強い人同士)",
-        btn_generate: "次の組み合わせを生成", current_games: "進行中のゲーム", btn_end_session: "練習を終了して記録を保存",
-        reg_member: "新規メンバー登録", edit_member: "メンバー情報の編集", male: "男性", female: "女性", club_none: "所属なし",
-        btn_add_member: "メンバーを追加", btn_update: "情報を更新する", btn_cancel: "キャンセル",
-        member_list: "登録メンバー一覧", club_mgmt: "所属クラブ管理", btn_add_club: "クラブを追加",
-        add_group: "開催する練習会の管理", edit_group: "練習会情報の編集", qr_upload: "決済用QRコード画像 (任意):",
-        btn_add_group: "練習会を追加", history_title: "練習会履歴", filter_member: "メンバー検索:", btn_close: "閉じる",
-        status_present: "出席", status_absent: "休み", pay_done: "集金済", pay_wait: "未納",
-        play_count: "試合数", no_members: "メンバーがいません", no_groups: "データがありません",
-        btn_edit: "編集", btn_delete: "削除", court: "コート", register_score: "結果登録", registered: "✓ スコア保存済",
-        edit_players: "✍️ メンバー変更", save_players: "💾 変更を確定", all_clubs: "すべて表示", all_members: "全員を表示",
-        synergy_ranking: "相性ランキング (シナジー効果)", best_partners: "相性の良いペア (上位5)", worst_partners: "シナジーが発揮しにくいペア (下位5)"
+        tab_play: "今日の練習", tab_members: "名簿管理", tab_groups: "クラブ・練習会", tab_history: "過去の履歴",
+        manual_title: "📖 マニュアル", manual_intro_title: "【Match Maker Pro とは】", manual_intro_text: "本アプリは「実力差」と「休み回数の不平等」を全自動で解決するツールです。イロレーティングとシナジー解析により、最適なマッチアップを提供します。", manual_how_title: "⚙️ 使い方", manual_step1: "クラブ・練習会を登録します。", manual_step2: "名簿でメンバーを追加します。", manual_step3: "練習会とコート数を選び開始します。", manual_step4: "出欠を取り、モードを選んで組み合わせを生成します。", manual_step5: "試合後にスコアを入力すると、実力と相性をAIが学習します。", manual_copyright: "無断複写・転載を禁じます。",
+        start_session: "練習の開始", courts: "コート数:", btn_attendance: "出席を取る", attendance_mgmt: "出欠・集金管理", btn_show_qr: "📱 支払いQR表示", filter_club: "クラブ絞り込み:", match_settings: "組み合わせ設定", mode_select: "モード選択:", mode_even: "実力均等 (男女区別なし)", mode_level_power: "レベル別 (強い人同士)", mode_level_mixed: "レベル別 (ミックス優先)", btn_generate: "次の組み合わせを生成", current_games: "進行中のゲーム", btn_end_session: "練習を終了して保存",
+        reg_member: "新規メンバー登録", edit_member: "メンバーの編集", male: "男性", female: "女性", club_none: "所属なし", btn_add_member: "メンバーを追加", btn_update: "更新", btn_cancel: "キャンセル", member_list: "メンバー一覧", club_mgmt: "クラブ管理", btn_add_club: "クラブ追加", add_group: "練習会の管理", edit_group: "練習会の編集", qr_upload: "決済用QR (任意):", btn_add_group: "練習会を追加", history_title: "履歴", filter_member: "検索:", btn_close: "閉じる",
+        status_present: "出席", status_absent: "休み", pay_done: "集金済", pay_wait: "未納", play_count: "試合数", no_members: "データなし", no_groups: "データなし", btn_edit: "編集", btn_delete: "削除", court: "コート", register_score: "結果登録", registered: "✓ 保存済", edit_players: "✍️ 変更", save_players: "💾 確定", all_clubs: "すべて表示", all_members: "全員",
+        synergy_ranking: "相性ランキング", best_partners: "ベストパートナー", worst_partners: "要注意パートナー", prompt_edit_club: "新しいクラブ名を入力してください:"
     },
     en: {
-        tab_play: "Play Today", tab_members: "Members", tab_groups: "Clubs/Sessions", tab_history: "History",
-        start_session: "Start Session", courts: "Courts:", btn_attendance: "Take Attendance",
-        attendance_mgmt: "Attendance & Payment", btn_show_qr: "📱 Show QR", filter_club: "Filter Club:",
-        match_settings: "Match Settings", mode_select: "Mode:",
-        mode_even: "Even Power (Dispersed)", mode_level_power: "Level-based (Ignore Gender)", mode_level_mixed: "Level-based (Prioritize Mixed)",
-        btn_generate: "Generate Matches", current_games: "Current Games", btn_end_session: "End Session & Save",
-        reg_member: "Register Member", edit_member: "Edit Member", male: "Male", female: "Female", club_none: "No Club",
-        btn_add_member: "Add Member", btn_update: "Update Info", btn_cancel: "Cancel",
-        member_list: "Member List", club_mgmt: "Club Management", btn_add_club: "Add Club",
-        add_group: "Session Management", edit_group: "Edit Session", qr_upload: "Payment QR (Optional):",
-        btn_add_group: "Add Session", history_title: "Session History", filter_member: "Search Member:", btn_close: "Close",
-        status_present: "Present", status_absent: "Rest", pay_done: "Paid", pay_wait: "Unpaid",
-        play_count: "Games", no_members: "No members found.", no_groups: "No data.",
-        btn_edit: "Edit", btn_delete: "Delete", court: "Court", register_score: "Submit Score", registered: "✓ Score Saved",
-        edit_players: "✍️ Edit Players", save_players: "💾 Save Changes", all_clubs: "Show All", all_members: "All Members",
-        synergy_ranking: "Synergy Ranking", best_partners: "Top 5 Best Partners", worst_partners: "Bottom 5 (Low Synergy)"
+        tab_play: "Play", tab_members: "Members", tab_groups: "Clubs/Sessions", tab_history: "History",
+        manual_title: "📖 Manual", manual_intro_title: "[About Match Maker Pro]", manual_intro_text: "This app automates fair matchmaking and court time distribution using Elo rating and synergy analysis for optimal play.", manual_how_title: "⚙️ How to use", manual_step1: "Register Clubs and Sessions.", manual_step2: "Add Members.", manual_step3: "Select a Session and Courts to start.", manual_step4: "Manage attendance and generate matches.", manual_step5: "Input scores to let AI learn skills and synergies.", manual_copyright: "All rights reserved.",
+        start_session: "Start Session", courts: "Courts:", btn_attendance: "Take Attendance", attendance_mgmt: "Attendance/Pay", btn_show_qr: "📱 Show QR", filter_club: "Filter Club:", match_settings: "Match Settings", mode_select: "Mode:", mode_even: "Even Power", mode_level_power: "Level-based", mode_level_mixed: "Level-based (Mixed)", btn_generate: "Generate Matches", current_games: "Current Games", btn_end_session: "End & Save",
+        reg_member: "Register Member", edit_member: "Edit Member", male: "Male", female: "Female", club_none: "No Club", btn_add_member: "Add Member", btn_update: "Update", btn_cancel: "Cancel", member_list: "Member List", club_mgmt: "Club Mgmt", btn_add_club: "Add Club", add_group: "Session Mgmt", edit_group: "Edit Session", qr_upload: "Payment QR:", btn_add_group: "Add Session", history_title: "History", filter_member: "Search:", btn_close: "Close",
+        status_present: "Present", status_absent: "Rest", pay_done: "Paid", pay_wait: "Unpaid", play_count: "Games", no_members: "No data", no_groups: "No data", btn_edit: "Edit", btn_delete: "Delete", court: "Court", register_score: "Submit", registered: "✓ Saved", edit_players: "✍️ Edit", save_players: "💾 Save", all_clubs: "All", all_members: "All",
+        synergy_ranking: "Synergy Ranking", best_partners: "Best Partners", worst_partners: "Worst Partners", prompt_edit_club: "Enter new club name:"
     },
-    zh: {
-        tab_play: "今日练习", tab_members: "成员管理", tab_groups: "俱乐部/活动", tab_history: "历史记录",
-        start_session: "开始练习", courts: "场地数:", btn_attendance: "考勤打卡",
-        attendance_mgmt: "出勤与收款", btn_show_qr: "📱 显示收款码", filter_club: "筛选俱乐部:",
-        match_settings: "比赛设置", mode_select: "模式选择:",
-        mode_even: "实力均衡 (不分性别)", mode_level_power: "按水平分组 (不分性别)", mode_level_mixed: "按水平分组 (优先混双)",
-        btn_generate: "生成下一轮对阵", current_games: "进行中的比赛", btn_end_session: "结束练习并保存",
-        reg_member: "注册新成员", edit_member: "编辑成员", male: "男", female: "女", club_none: "无俱乐部",
-        btn_add_member: "添加成员", btn_update: "更新信息", btn_cancel: "取消",
-        member_list: "成员列表", club_mgmt: "俱乐部管理", btn_add_club: "添加俱乐部",
-        add_group: "活动管理", edit_group: "编辑活动", qr_upload: "收款二维码 (可选):",
-        btn_add_group: "添加活动", history_title: "历史记录", filter_member: "搜索成员:", btn_close: "关闭",
-        status_present: "出勤", status_absent: "休息", pay_done: "已付", pay_wait: "未付",
-        play_count: "比赛次数", no_members: "没有成员", no_groups: "没有数据",
-        btn_edit: "编辑", btn_delete: "删除", court: "场地", register_score: "提交比分", registered: "✓ 比分已保存",
-        edit_players: "✍️ 调整人员", save_players: "💾 确认修改", all_clubs: "显示全部", all_members: "所有人",
-        synergy_ranking: "默契度 (协同) 排名", best_partners: "最佳搭档 (Top 5)", worst_partners: "需注意搭档 (后 5)"
-    },
-    id: {
-        tab_play: "Main Hari Ini", tab_members: "Anggota", tab_groups: "Klub/Sesi", tab_history: "Riwayat",
-        start_session: "Mulai Sesi", courts: "Lap:", btn_attendance: "Kehadiran",
-        attendance_mgmt: "Kehadiran & Bayar", btn_show_qr: "📱 Tampilkan QR", filter_club: "Filter Klub:",
-        match_settings: "Pengaturan Laga", mode_select: "Mode:",
-        mode_even: "Kekuatan Merata", mode_level_power: "Berdasarkan Level", mode_level_mixed: "Level (Campuran)",
-        btn_generate: "Buat Laga Berikutnya", current_games: "Laga Saat Ini", btn_end_session: "Akhiri & Simpan",
-        reg_member: "Daftar Anggota", edit_member: "Edit Anggota", male: "Pria", female: "Wanita", club_none: "Tanpa Klub",
-        btn_add_member: "Tambah Anggota", btn_update: "Perbarui", btn_cancel: "Batal",
-        member_list: "Daftar Anggota", club_mgmt: "Kelola Klub", btn_add_club: "Tambah Klub",
-        add_group: "Kelola Sesi", edit_group: "Edit Sesi", qr_upload: "QR Pembayaran (Opsional):",
-        btn_add_group: "Tambah Sesi", history_title: "Riwayat Sesi", filter_member: "Cari Anggota:", btn_close: "Tutup",
-        status_present: "Hadir", status_absent: "Istirahat", pay_done: "Lunas", pay_wait: "Belum",
-        play_count: "Main", no_members: "Tidak ada anggota.", no_groups: "Tidak ada data.",
-        btn_edit: "Edit", btn_delete: "Hapus", court: "Lap", register_score: "Simpan Skor", registered: "✓ Skor Disimpan",
-        edit_players: "✍️ Edit Pemain", save_players: "💾 Simpan", all_clubs: "Semua", all_members: "Semua Anggota",
-        synergy_ranking: "Peringkat Sinergi", best_partners: "Pasangan Terbaik (Top 5)", worst_partners: "Perlu Penyesuaian (Bawah 5)"
-    }
+    'zh-CN': { tab_play: "练习", tab_members: "成员", tab_groups: "俱乐部/活动", tab_history: "历史", manual_title: "📖 说明书", manual_intro_title: "[关于]", manual_intro_text: "本应用通过Elo评分和默契度分析，自动解决上场时间不均和实力不平等的难题。", manual_how_title: "⚙️ 使用方法", manual_step1: "注册俱乐部与活动", manual_step2: "添加成员", manual_step3: "选择活动与场地并开始", manual_step4: "考勤并生成比赛", manual_step5: "输入比分让AI学习实力与默契度", manual_copyright: "版权所有，禁止转载", start_session: "开始", courts: "场地:", btn_attendance: "考勤", attendance_mgmt: "出勤/收款", btn_show_qr: "📱 收款码", filter_club: "筛选:", match_settings: "设置", mode_select: "模式:", mode_even: "实力均衡", mode_level_power: "按水平分组", mode_level_mixed: "按水平 (混双)", btn_generate: "生成对阵", current_games: "当前比赛", btn_end_session: "结束并保存", reg_member: "注册成员", edit_member: "编辑", male: "男", female: "女", club_none: "无", btn_add_member: "添加", btn_update: "更新", btn_cancel: "取消", member_list: "列表", club_mgmt: "俱乐部管理", btn_add_club: "添加", add_group: "活动管理", edit_group: "编辑", qr_upload: "收款码:", btn_add_group: "添加", history_title: "历史", filter_member: "搜索:", btn_close: "关闭", status_present: "出勤", status_absent: "休息", pay_done: "已付", pay_wait: "未付", play_count: "场次", no_members: "无", no_groups: "无", btn_edit: "编辑", btn_delete: "删除", court: "场地", register_score: "提交", registered: "✓ 已存", edit_players: "✍️ 修改", save_players: "💾 保存", all_clubs: "全部", all_members: "所有人", synergy_ranking: "默契度排名", best_partners: "最佳搭档", worst_partners: "需注意搭档", prompt_edit_club: "输入新名称:" },
+    'zh-TW': { tab_play: "練習", tab_members: "成員", tab_groups: "俱樂部/活動", tab_history: "歷史", manual_title: "📖 說明書", manual_intro_title: "[關於]", manual_intro_text: "本應用透過Elo評分和默契度分析，自動解決上場時間不均和實力不平等的難題。", manual_how_title: "⚙️ 使用方法", manual_step1: "註冊俱樂部與活動", manual_step2: "添加成員", manual_step3: "選擇活動與場地並開始", manual_step4: "考勤並生成比賽", manual_step5: "輸入比分讓AI學習", manual_copyright: "版權所有，禁止轉載", start_session: "開始", courts: "場地:", btn_attendance: "考勤", attendance_mgmt: "出勤/收款", btn_show_qr: "📱 收款碼", filter_club: "篩選:", match_settings: "設置", mode_select: "模式:", mode_even: "實力均衡", mode_level_power: "按水平分組", mode_level_mixed: "按水平 (混雙)", btn_generate: "生成對陣", current_games: "當前比賽", btn_end_session: "結束並保存", reg_member: "註冊成員", edit_member: "編輯", male: "男", female: "女", club_none: "無", btn_add_member: "添加", btn_update: "更新", btn_cancel: "取消", member_list: "列表", club_mgmt: "俱樂部管理", btn_add_club: "添加", add_group: "活動管理", edit_group: "編輯", qr_upload: "收款碼:", btn_add_group: "添加", history_title: "歷史", filter_member: "搜索:", btn_close: "關閉", status_present: "出勤", status_absent: "休息", pay_done: "已付", pay_wait: "未付", play_count: "場次", no_members: "無", no_groups: "無", btn_edit: "編輯", btn_delete: "刪除", court: "場地", register_score: "提交", registered: "✓ 已存", edit_players: "✍️ 修改", save_players: "💾 保存", all_clubs: "全部", all_members: "所有人", synergy_ranking: "默契度排名", best_partners: "最佳搭檔", worst_partners: "需注意搭檔", prompt_edit_club: "輸入新名稱:" },
+    ms: { tab_play: "Main", tab_members: "Ahli", tab_groups: "Kelab/Sesi", tab_history: "Sejarah", manual_title: "📖 Manual", manual_intro_title: "[Tentang]", manual_intro_text: "Aplikasi ini mengautomasikan pengagihan masa & padanan adil dengan rating Elo.", manual_how_title: "⚙️ Cara Guna", manual_step1: "Daftar Kelab.", manual_step2: "Tambah Ahli.", manual_step3: "Mula Sesi.", manual_step4: "Jana perlawanan.", manual_step5: "Masukkan skor untuk AI.", manual_copyright: "Hak cipta terpelihara.", start_session: "Mula", courts: "Gelanggang:", btn_attendance: "Kehadiran", attendance_mgmt: "Hadir/Bayar", btn_show_qr: "📱 QR", filter_club: "Tapis:", match_settings: "Tetapan", mode_select: "Mod:", mode_even: "Rata", mode_level_power: "Tahap", mode_level_mixed: "Tahap (Campur)", btn_generate: "Jana Laga", current_games: "Laga Semasa", btn_end_session: "Tamat & Simpan", reg_member: "Daftar", edit_member: "Edit", male: "L", female: "P", club_none: "Tiada", btn_add_member: "Tambah", btn_update: "Kemas kini", btn_cancel: "Batal", member_list: "Senarai", club_mgmt: "Kelab", btn_add_club: "Tambah", add_group: "Sesi", edit_group: "Edit", qr_upload: "QR:", btn_add_group: "Tambah", history_title: "Sejarah", filter_member: "Cari:", btn_close: "Tutup", status_present: "Hadir", status_absent: "Rehat", pay_done: "Dibayar", pay_wait: "Belum", play_count: "Laga", no_members: "Tiada", no_groups: "Tiada", btn_edit: "Edit", btn_delete: "Padam", court: "Gelanggang", register_score: "Hantar", registered: "✓ Disimpan", edit_players: "✍️ Edit", save_players: "💾 Simpan", all_clubs: "Semua", all_members: "Semua", synergy_ranking: "Ranking Sinergi", best_partners: "Terbaik", worst_partners: "Terburuk", prompt_edit_club: "Nama baru:" },
+    id: { tab_play: "Main", tab_members: "Anggota", tab_groups: "Klub/Sesi", tab_history: "Riwayat", manual_title: "📖 Manual", manual_intro_title: "[Tentang]", manual_intro_text: "Aplikasi ini mengatur pertandingan adil secara otomatis.", manual_how_title: "⚙️ Cara Pakai", manual_step1: "Daftar Klub.", manual_step2: "Tambah Anggota.", manual_step3: "Mulai Sesi.", manual_step4: "Buat pertandingan.", manual_step5: "Input skor.", manual_copyright: "Hak cipta dilindungi.", start_session: "Mulai", courts: "Lap:", btn_attendance: "Hadir", attendance_mgmt: "Hadir/Bayar", btn_show_qr: "📱 QR", filter_club: "Filter:", match_settings: "Set Laga", mode_select: "Mode:", mode_even: "Rata", mode_level_power: "Level", mode_level_mixed: "Level (Campuran)", btn_generate: "Buat Laga", current_games: "Laga Saat Ini", btn_end_session: "Akhiri", reg_member: "Daftar", edit_member: "Edit", male: "Pria", female: "Wanita", club_none: "Kosong", btn_add_member: "Tambah", btn_update: "Perbarui", btn_cancel: "Batal", member_list: "Daftar", club_mgmt: "Klub", btn_add_club: "Tambah", add_group: "Sesi", edit_group: "Edit", qr_upload: "QR:", btn_add_group: "Tambah", history_title: "Riwayat", filter_member: "Cari:", btn_close: "Tutup", status_present: "Hadir", status_absent: "Istirahat", pay_done: "Lunas", pay_wait: "Belum", play_count: "Laga", no_members: "Kosong", no_groups: "Kosong", btn_edit: "Edit", btn_delete: "Hapus", court: "Lap", register_score: "Simpan", registered: "✓ Disimpan", edit_players: "✍️ Edit", save_players: "💾 Simpan", all_clubs: "Semua", all_members: "Semua", synergy_ranking: "Sinergi", best_partners: "Terbaik", worst_partners: "Terburuk", prompt_edit_club: "Nama baru:" },
+    ko: { tab_play: "오늘의 연습", tab_members: "명부", tab_groups: "클럽/연습", tab_history: "기록", manual_title: "📖 매뉴얼", manual_intro_title: "[앱 소개]", manual_intro_text: "공정한 매칭과 휴식 시간 분배를 자동화하는 앱입니다.", manual_how_title: "⚙️ 사용법", manual_step1: "클럽 등록", manual_step2: "멤버 추가", manual_step3: "연습 시작", manual_step4: "매칭 생성", manual_step5: "점수 입력", manual_copyright: "모든 권리 보유.", start_session: "시작", courts: "코트 수:", btn_attendance: "출석 확인", attendance_mgmt: "출석/수금", btn_show_qr: "📱 QR 표시", filter_club: "필터:", match_settings: "설정", mode_select: "모드:", mode_even: "균등", mode_level_power: "수준별", mode_level_mixed: "수준별(혼복)", btn_generate: "매치 생성", current_games: "진행 중", btn_end_session: "종료 및 저장", reg_member: "멤버 등록", edit_member: "편집", male: "남", female: "여", club_none: "없음", btn_add_member: "추가", btn_update: "업데이트", btn_cancel: "취소", member_list: "명단", club_mgmt: "클럽 관리", btn_add_club: "추가", add_group: "연습 관리", edit_group: "편집", qr_upload: "QR 코드:", btn_add_group: "추가", history_title: "기록", filter_member: "검색:", btn_close: "닫기", status_present: "출석", status_absent: "휴식", pay_done: "완납", pay_wait: "미납", play_count: "게임 수", no_members: "없음", no_groups: "없음", btn_edit: "편집", btn_delete: "삭제", court: "코트", register_score: "등록", registered: "✓ 저장됨", edit_players: "✍️ 변경", save_players: "💾 확인", all_clubs: "모두", all_members: "전체", synergy_ranking: "시너지 랭킹", best_partners: "베스트 파트너", worst_partners: "워스트 파트너", prompt_edit_club: "새 이름:" },
+    es: { tab_play: "Jugar", tab_members: "Miembros", tab_groups: "Clubes/Sesión", tab_history: "Historial", manual_title: "📖 Manual", manual_intro_title: "[Info]", manual_intro_text: "Emparejamiento justo y automático con Elo.", manual_how_title: "⚙️ Uso", manual_step1: "Clubes", manual_step2: "Miembros", manual_step3: "Iniciar", manual_step4: "Generar", manual_step5: "Puntos", manual_copyright: "Derechos reservados.", start_session: "Iniciar", courts: "Pistas:", btn_attendance: "Asistencia", attendance_mgmt: "Asistencia/Pago", btn_show_qr: "📱 QR", filter_club: "Filtro:", match_settings: "Ajustes", mode_select: "Modo:", mode_even: "Equilibrado", mode_level_power: "Por Nivel", mode_level_mixed: "Nivel (Mixto)", btn_generate: "Generar", current_games: "Actual", btn_end_session: "Terminar", reg_member: "Registro", edit_member: "Editar", male: "H", female: "M", club_none: "Ninguno", btn_add_member: "Añadir", btn_update: "Actualizar", btn_cancel: "Cancelar", member_list: "Lista", club_mgmt: "Clubes", btn_add_club: "Añadir", add_group: "Sesiones", edit_group: "Editar", qr_upload: "QR:", btn_add_group: "Añadir", history_title: "Historial", filter_member: "Buscar:", btn_close: "Cerrar", status_present: "Presente", status_absent: "Descanso", pay_done: "Pagado", pay_wait: "Debe", play_count: "Juegos", no_members: "Vacío", no_groups: "Vacío", btn_edit: "Editar", btn_delete: "Borrar", court: "Pista", register_score: "Enviar", registered: "✓ Guardado", edit_players: "✍️ Editar", save_players: "💾 Guardar", all_clubs: "Todos", all_members: "Todos", synergy_ranking: "Sinergia", best_partners: "Mejores", worst_partners: "Peores", prompt_edit_club: "Nuevo nombre:" },
+    da: { tab_play: "Spil", tab_members: "Medlemmer", tab_groups: "Klub/Session", tab_history: "Historik", manual_title: "📖 Manual", manual_intro_title: "[Om]", manual_intro_text: "Automatisk retfærdig matchmaking med Elo.", manual_how_title: "⚙️ Brug", manual_step1: "Klub", manual_step2: "Medlem", manual_step3: "Start", manual_step4: "Match", manual_step5: "Score", manual_copyright: "Alle rettigheder forbeholdes.", start_session: "Start", courts: "Baner:", btn_attendance: "Fremmøde", attendance_mgmt: "Fremmøde/Betal", btn_show_qr: "📱 QR", filter_club: "Filter:", match_settings: "Indstillinger", mode_select: "Mode:", mode_even: "Lige", mode_level_power: "Niveau", mode_level_mixed: "Niveau (Mix)", btn_generate: "Generer", current_games: "Nuværende", btn_end_session: "Afslut", reg_member: "Registrer", edit_member: "Rediger", male: "M", female: "K", club_none: "Ingen", btn_add_member: "Tilføj", btn_update: "Opdater", btn_cancel: "Annuller", member_list: "Liste", club_mgmt: "Klubber", btn_add_club: "Tilføj", add_group: "Sessioner", edit_group: "Rediger", qr_upload: "QR:", btn_add_group: "Tilføj", history_title: "Historik", filter_member: "Søg:", btn_close: "Luk", status_present: "Tilstede", status_absent: "Pause", pay_done: "Betalt", pay_wait: "Ubetalt", play_count: "Kampe", no_members: "Tom", no_groups: "Tom", btn_edit: "Rediger", btn_delete: "Slet", court: "Bane", register_score: "Send", registered: "✓ Gemt", edit_players: "✍️ Rediger", save_players: "💾 Gem", all_clubs: "Alle", all_members: "Alle", synergy_ranking: "Synergi", best_partners: "Bedste", worst_partners: "Værste", prompt_edit_club: "Nyt navn:" },
+    fr: { tab_play: "Jouer", tab_members: "Membres", tab_groups: "Clubs/Session", tab_history: "Historique", manual_title: "📖 Manuel", manual_intro_title: "[Info]", manual_intro_text: "Matchmaking automatique et juste avec Elo.", manual_how_title: "⚙️ Utilisation", manual_step1: "Clubs", manual_step2: "Membres", manual_step3: "Démarrer", manual_step4: "Générer", manual_step5: "Score", manual_copyright: "Tous droits réservés.", start_session: "Démarrer", courts: "Terrains:", btn_attendance: "Présence", attendance_mgmt: "Présence/Paiement", btn_show_qr: "📱 QR", filter_club: "Filtre:", match_settings: "Paramètres", mode_select: "Mode:", mode_even: "Équilibré", mode_level_power: "Niveau", mode_level_mixed: "Niveau (Mixte)", btn_generate: "Générer", current_games: "En cours", btn_end_session: "Terminer", reg_member: "Inscription", edit_member: "Éditer", male: "H", female: "F", club_none: "Aucun", btn_add_member: "Ajouter", btn_update: "Mettre à jour", btn_cancel: "Annuler", member_list: "Liste", club_mgmt: "Clubs", btn_add_club: "Ajouter", add_group: "Sessions", edit_group: "Éditer", qr_upload: "QR:", btn_add_group: "Ajouter", history_title: "Historique", filter_member: "Chercher:", btn_close: "Fermer", status_present: "Présent", status_absent: "Repos", pay_done: "Payé", pay_wait: "Non payé", play_count: "Matchs", no_members: "Vide", no_groups: "Vide", btn_edit: "Éditer", btn_delete: "Supprimer", court: "Terrain", register_score: "Envoyer", registered: "✓ Enregistré", edit_players: "✍️ Éditer", save_players: "💾 Sauver", all_clubs: "Tous", all_members: "Tous", synergy_ranking: "Synergie", best_partners: "Meilleurs", worst_partners: "Pires", prompt_edit_club: "Nouveau nom:" },
+    de: { tab_play: "Spielen", tab_members: "Mitglieder", tab_groups: "Clubs/Session", tab_history: "Verlauf", manual_title: "📖 Handbuch", manual_intro_title: "[Info]", manual_intro_text: "Faires Matchmaking durch Elo-System.", manual_how_title: "⚙️ Nutzung", manual_step1: "Clubs", manual_step2: "Mitglieder", manual_step3: "Start", manual_step4: "Generieren", manual_step5: "Punkte", manual_copyright: "Alle Rechte vorbehalten.", start_session: "Start", courts: "Plätze:", btn_attendance: "Anwesenheit", attendance_mgmt: "Anwesenheit/Zahlung", btn_show_qr: "📱 QR", filter_club: "Filter:", match_settings: "Einstellungen", mode_select: "Modus:", mode_even: "Ausgeglichen", mode_level_power: "Nach Niveau", mode_level_mixed: "Niveau (Mixed)", btn_generate: "Generieren", current_games: "Aktuell", btn_end_session: "Beenden", reg_member: "Registrieren", edit_member: "Bearbeiten", male: "M", female: "W", club_none: "Keiner", btn_add_member: "Hinzufügen", btn_update: "Update", btn_cancel: "Abbrechen", member_list: "Liste", club_mgmt: "Clubs", btn_add_club: "Hinzufügen", add_group: "Sessions", edit_group: "Bearbeiten", qr_upload: "QR:", btn_add_group: "Hinzufügen", history_title: "Verlauf", filter_member: "Suchen:", btn_close: "Schließen", status_present: "Anwesend", status_absent: "Pause", pay_done: "Bezahlt", pay_wait: "Offen", play_count: "Spiele", no_members: "Leer", no_groups: "Leer", btn_edit: "Bearbeiten", btn_delete: "Löschen", court: "Platz", register_score: "Senden", registered: "✓ Gespeichert", edit_players: "✍️ Bearbeiten", save_players: "💾 Speichern", all_clubs: "Alle", all_members: "Alle", synergy_ranking: "Synergie", best_partners: "Beste", worst_partners: "Schlechteste", prompt_edit_club: "Neuer Name:" }
 };
 
 const app = {
@@ -346,11 +342,8 @@ const app = {
     },
 
     renderAll() {
-        this.renderClubs();
-        this.renderGroups();
-        this.renderDatabase();
-        this.updateSelects();
-        this.renderHistory();
+        this.renderClubs(); this.renderGroups(); this.renderDatabase();
+        this.updateSelects(); this.renderHistory();
     },
 
     switchTab(tabId) {
@@ -369,6 +362,16 @@ const app = {
         document.getElementById('new-club-name').value = '';
         this.saveData(); this.renderAll();
     },
+    editClub(oldName) {
+        const newName = prompt(this.t('prompt_edit_club'), oldName);
+        if (newName && newName.trim() !== '' && newName !== oldName) {
+            if (this.clubs.includes(newName)) return alert('Already exists');
+            const idx = this.clubs.indexOf(oldName);
+            this.clubs[idx] = newName;
+            this.members.forEach(m => { if(m.club === oldName) m.club = newName; });
+            this.saveData(); this.renderAll();
+        }
+    },
     deleteClub(name) {
         if(confirm(`Delete ${name}?`)) {
             this.clubs = this.clubs.filter(c => c !== name);
@@ -380,10 +383,16 @@ const app = {
         const ui = document.getElementById('club-list-ui');
         ui.innerHTML = this.clubs.map(c => `
             <div style="border-bottom: 1px solid #eee; padding: 5px 0; display: flex; justify-content: space-between;">
-                <span translate="no" class="notranslate">${c}</span> <button class="btn-danger" style="padding: 2px 5px; font-size: 0.8rem;" onclick="app.deleteClub('${c}')">${this.t('btn_delete')}</button>
+                <span translate="no" class="notranslate">${c}</span> 
+                <div>
+                    <button class="btn-edit" style="padding: 2px 5px; font-size: 0.8rem;" onclick="app.editClub('${c}')">${this.t('btn_edit')}</button>
+                    <button class="btn-danger" style="padding: 2px 5px; font-size: 0.8rem;" onclick="app.deleteClub('${c}')">${this.t('btn_delete')}</button>
+                </div>
             </div>
         `).join('') || `<p style="color:#777;">${this.t('no_groups')}</p>`;
     },
+    
+    // グループ管理 (既存のまま)
     submitGroup() {
         const name = document.getElementById('new-group-name').value.trim();
         if (!name) return;
@@ -421,10 +430,7 @@ const app = {
         document.getElementById('cancel-group-edit-btn').style.display = 'none';
     },
     deleteGroup(groupName) {
-        if(confirm(`Delete ${groupName}?`)) {
-            this.groups = this.groups.filter(g => g.name !== groupName);
-            this.saveData(); this.renderAll();
-        }
+        if(confirm(`Delete ${groupName}?`)) { this.groups = this.groups.filter(g => g.name !== groupName); this.saveData(); this.renderAll(); }
     },
     renderGroups() {
         const ui = document.getElementById('group-list-ui');
@@ -515,7 +521,7 @@ const app = {
         `).join('') || `<p>${this.t('no_members')}</p>`;
     },
 
-    // --- 今日の練習（セッション） ---
+    // --- 今日の練習 ---
     initSession() {
         const targetGroupName = document.getElementById('session-group-select').value;
         if (!targetGroupName) return;
@@ -569,7 +575,6 @@ const app = {
     renderAttendance() {
         const ui = document.getElementById('member-ui');
         const filter = document.getElementById('attendance-filter-club').value;
-        
         const displayMembers = this.members.filter(m => (filter === '' || m.club === filter || m.active));
         
         ui.innerHTML = displayMembers.map(m => `
@@ -583,19 +588,14 @@ const app = {
     },
 
     getBestPairing(players, mode) {
-        const patterns = [
-            { t1: [0, 1], t2: [2, 3] }, { t1: [0, 2], t2: [1, 3] }, { t1: [0, 3], t2: [1, 2] }
-        ];
-        let bestPattern = patterns[0];
-        let bestScore = -Infinity;
-
+        const patterns = [ { t1: [0, 1], t2: [2, 3] }, { t1: [0, 2], t2: [1, 3] }, { t1: [0, 3], t2: [1, 2] } ];
+        let bestPattern = patterns[0], bestScore = -Infinity;
         const getS = (pA, pB) => (pA.synergies && pA.synergies[pB.id]) ? pA.synergies[pB.id] : 0;
 
         patterns.forEach(p => {
             const p1 = players[p.t1[0]], p2 = players[p.t1[1]];
             const p3 = players[p.t2[0]], p4 = players[p.t2[1]];
-            
-            const rT1 = (p1.rating + p2.rating) / 2 + getS(p1, p2);
+            const rT1 = (p1.rating + p2.rating) / 2 + getS(p1, p2); 
             const rT2 = (p3.rating + p4.rating) / 2 + getS(p3, p4);
             const diff = Math.abs(rT1 - rT2);
             
@@ -608,7 +608,6 @@ const app = {
             }
             if (score > bestScore) { bestScore = score; bestPattern = p; }
         });
-
         return [ players[bestPattern.t1[0]], players[bestPattern.t1[1]], players[bestPattern.t2[0]], players[bestPattern.t2[1]] ];
     },
 
@@ -643,24 +642,18 @@ const app = {
         for (let i = 0; i < this.currentSession.courts; i++) {
             let players = this.getBestPairing(courtPlayersList[i], mode);
             currentMatchRecord.courts.push({ 
-                team1: [players[0].id, players[1].id], 
-                team2: [players[2].id, players[3].id], 
-                names: players.map(p => p.name),
-                score1: null, score2: null, isRegistered: false 
+                team1: [players[0].id, players[1].id], team2: [players[2].id, players[3].id], 
+                names: players.map(p => p.name), score1: null, score2: null, isRegistered: false 
             });
         }
 
         this.currentSession.matches.push(currentMatchRecord);
         this.isEditingMatch = false; 
-        this.renderAttendance();
-        this.renderMatches();
+        this.renderAttendance(); this.renderMatches();
         document.getElementById('game-number').innerText = ++this.currentSession.gameCount;
     },
 
-    toggleEditMatch() {
-        this.isEditingMatch = !this.isEditingMatch;
-        this.renderMatches();
-    },
+    toggleEditMatch() { this.isEditingMatch = !this.isEditingMatch; this.renderMatches(); },
 
     changePlayer(courtIdx, teamIdx, posIdx, newPlayerIdStr) {
         const newId = parseInt(newPlayerIdStr);
@@ -676,7 +669,6 @@ const app = {
     renderMatches() {
         const ui = document.getElementById('courts-ui');
         if(!this.currentSession || this.currentSession.matches.length === 0) { ui.innerHTML = ''; return; }
-        
         const matchRecord = this.currentSession.matches[this.currentSession.matches.length - 1];
         ui.innerHTML = '';
 
@@ -700,12 +692,10 @@ const app = {
                     <div class="team-box"><b>Team 1:</b> ${playerHtml(p[0], 1, 0)} & ${playerHtml(p[1], 1, 1)}</div>
                     <div style="text-align:center; font-size:0.8rem; color:#888;">VS</div>
                     <div class="team-box"><b>Team 2:</b> ${playerHtml(p[2], 2, 0)} & ${playerHtml(p[3], 2, 1)}</div>
-                    
                     ${!this.isEditingMatch ? `
                     <div class="score-input-area" id="score-area-${i}">
                         ${c.isRegistered ? `<span style="color:#2ecc71; font-weight:bold;">${this.t('registered')} (${c.score1} - ${c.score2})</span>` : `
-                        <input type="number" id="score_t1_${i}" placeholder="T1" style="width: 50px;"> - 
-                        <input type="number" id="score_t2_${i}" placeholder="T2" style="width: 50px;">
+                        <input type="number" id="score_t1_${i}" placeholder="T1" style="width: 50px;"> - <input type="number" id="score_t2_${i}" placeholder="T2" style="width: 50px;">
                         <button class="btn-success" onclick="app.registerScore(${i})">${this.t('register_score')}</button>
                         `}
                     </div>` : ''}
@@ -721,7 +711,6 @@ const app = {
 
         const matchRecord = this.currentSession.matches[this.currentSession.matches.length - 1];
         const courtData = matchRecord.courts[courtIndex];
-        
         courtData.score1 = score1; courtData.score2 = score2; courtData.isRegistered = true;
 
         const t1_p1 = this.members.find(m => m.id === courtData.team1[0]); const t1_p2 = this.members.find(m => m.id === courtData.team1[1]);
@@ -729,31 +718,23 @@ const app = {
         if(!t1_p1 || !t1_p2 || !t2_p1 || !t2_p2) return;
 
         const getS = (pA, pB) => (pA.synergies && pA.synergies[pB.id]) ? pA.synergies[pB.id] : 0;
-
         const r1 = (t1_p1.rating + t1_p2.rating) / 2 + getS(t1_p1, t1_p2); 
         const r2 = (t2_p1.rating + t2_p2.rating) / 2 + getS(t2_p1, t2_p2);
         
-        const expected1 = 1 / (1 + Math.pow(10, (r2 - r1) / 400)); 
-        const expected2 = 1 / (1 + Math.pow(10, (r1 - r2) / 400));
-        
+        const expected1 = 1 / (1 + Math.pow(10, (r2 - r1) / 400)); const expected2 = 1 / (1 + Math.pow(10, (r1 - r2) / 400));
         let actual1, actual2;
         const pointDiff = Math.abs(score1 - score2);
         const marginMultiplier = Math.log(pointDiff + 1) * 0.5 + 0.5; 
 
-        if (score1 > score2) { actual1 = 1; actual2 = 0; } 
-        else if (score1 < score2) { actual1 = 0; actual2 = 1; } 
-        else { actual1 = 0.5; actual2 = 0.5; }
-
+        if (score1 > score2) { actual1 = 1; actual2 = 0; } else if (score1 < score2) { actual1 = 0; actual2 = 1; } else { actual1 = 0.5; actual2 = 0.5; }
         const delta1 = this.K_FACTOR * marginMultiplier * (actual1 - expected1);
         const delta2 = this.K_FACTOR * marginMultiplier * (actual2 - expected2);
 
         t1_p1.rating += delta1 * 0.5; t1_p2.rating += delta1 * 0.5;
         t2_p1.rating += delta2 * 0.5; t2_p2.rating += delta2 * 0.5;
 
-        t1_p1.synergies[t1_p2.id] = getS(t1_p1, t1_p2) + delta1 * 0.5;
-        t1_p2.synergies[t1_p1.id] = getS(t1_p2, t1_p1) + delta1 * 0.5;
-        t2_p1.synergies[t2_p2.id] = getS(t2_p1, t2_p2) + delta2 * 0.5;
-        t2_p2.synergies[t2_p1.id] = getS(t2_p2, t2_p1) + delta2 * 0.5;
+        t1_p1.synergies[t1_p2.id] = getS(t1_p1, t1_p2) + delta1 * 0.5; t1_p2.synergies[t1_p1.id] = getS(t1_p2, t1_p1) + delta1 * 0.5;
+        t2_p1.synergies[t2_p2.id] = getS(t2_p1, t2_p2) + delta2 * 0.5; t2_p2.synergies[t2_p1.id] = getS(t2_p2, t2_p1) + delta2 * 0.5;
 
         this.saveData(); this.renderMatches(); 
     },
@@ -761,38 +742,27 @@ const app = {
     endSession() {
         if(confirm('End Session?')) {
             if(this.currentSession && this.currentSession.matches.length > 0) {
-                this.history.unshift(this.currentSession);
-                this.saveData(); this.renderHistory();
+                this.history.unshift(this.currentSession); this.saveData(); this.renderHistory();
             }
-            document.getElementById('setup-section').style.display = 'block';
-            document.getElementById('attendance-section').style.display = 'none';
-            document.getElementById('match-section').style.display = 'none';
-            this.currentSession = null;
-            this.switchTab('tab-history');
+            document.getElementById('setup-section').style.display = 'block'; document.getElementById('attendance-section').style.display = 'none'; document.getElementById('match-section').style.display = 'none';
+            this.currentSession = null; this.switchTab('tab-history');
         }
     },
 
     renderHistory() {
         const ui = document.getElementById('history-ui');
         const filterId = document.getElementById('history-member-filter').value;
-        
-        let rankingHtml = '';
-        let filteredHistory = [];
+        let rankingHtml = '', filteredHistory = [];
 
         if (!filterId) {
             filteredHistory = this.history;
         } else {
             const memberId = parseInt(filterId);
-            
             this.history.forEach(session => {
                 let sessionCopy = { ...session, matches: [] };
                 session.matches.forEach(game => {
                     let gameCopy = { ...game, courts: [] };
-                    game.courts.forEach(court => {
-                        if (court.team1.includes(memberId) || court.team2.includes(memberId)) {
-                            gameCopy.courts.push(court);
-                        }
-                    });
+                    game.courts.forEach(court => { if (court.team1.includes(memberId) || court.team2.includes(memberId)) gameCopy.courts.push(court); });
                     if (gameCopy.courts.length > 0) sessionCopy.matches.push(gameCopy);
                 });
                 if (sessionCopy.matches.length > 0) filteredHistory.push(sessionCopy);
@@ -832,7 +802,7 @@ const app = {
             }
         }
 
-        const historyListHtml = filteredHistory.map(h => `
+        ui.innerHTML = rankingHtml + filteredHistory.map(h => `
             <div class="history-card">
                 <div class="history-date"><span translate="no" class="notranslate">${h.date} ${h.time} (${h.group})</span></div>
                 ${h.matches.map(m => `
@@ -848,8 +818,6 @@ const app = {
                 `).join('')}
             </div>
         `).join('') || `<p style="color:#777;">${this.t('no_history')}</p>`;
-
-        ui.innerHTML = rankingHtml + historyListHtml;
     }
 };
 
