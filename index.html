@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Badminton Match Maker Pro v3</title>
+    <title>Badminton Match Maker Pro v3.1</title>
     <style>
         body { font-family: sans-serif; margin: 0; padding: 0; background-color: #f4f7f6; color: #333; }
         .header { background-color: #2c3e50; color: white; padding: 15px 20px; text-align: center; font-size: 1.2rem; font-weight: bold; }
@@ -31,7 +31,7 @@
 </head>
 <body>
 
-<div class="header">🏸 Badminton Match Maker Pro v3</div>
+<div class="header">🏸 Badminton Match Maker Pro v3.1</div>
 <div class="tab-menu">
     <button class="tab-btn active" onclick="app.switchTab('tab-play')">今日の練習</button>
     <button class="tab-btn" onclick="app.switchTab('tab-members')">名簿管理</button>
@@ -45,8 +45,7 @@
         <div class="section" id="setup-section">
             <h2>練習の開始</h2>
             <div class="controls">
-                <select id="session-group-select">
-                    </select>
+                <select id="session-group-select"></select>
                 <label>コート数: <input type="number" id="court-count" value="3" min="1" max="10" style="width: 50px;"></label>
                 <button onclick="app.initSession()">出席を取る</button>
             </div>
@@ -81,8 +80,7 @@
                 </select>
             </div>
             <div style="margin-bottom: 5px; font-size: 0.9rem;">所属する練習会を選択:</div>
-            <div class="checkbox-group" id="new-member-groups">
-                </div>
+            <div class="checkbox-group" id="new-member-groups"></div>
             <button onclick="app.addMember()" style="margin-top: 10px;">メンバーを追加</button>
         </div>
         <div class="section">
@@ -138,11 +136,8 @@ const app = {
         if (savedGroups) this.groups = JSON.parse(savedGroups);
         if (savedHistory) this.history = JSON.parse(savedHistory);
 
-        // v2からの移行用フェイルセーフ
         this.members.forEach(m => {
-            if (!m.groups) {
-                m.groups = m.group ? [m.group] : [];
-            }
+            if (!m.groups) m.groups = m.group ? [m.group] : [];
         });
         
         this.renderAll();
@@ -161,14 +156,17 @@ const app = {
         this.updateGroupSelects();
     },
 
+    // 修正箇所：エラーの起きない堅牢なタブ切り替えロジック
     switchTab(tabId) {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        
         document.getElementById(tabId).classList.add('active');
-        event.currentTarget.classList.add('active');
+        
+        const activeBtn = document.querySelector(`.tab-btn[onclick="app.switchTab('${tabId}')"]`);
+        if(activeBtn) activeBtn.classList.add('active');
     },
 
-    // --- グループ管理ロジック ---
     addGroup() {
         const name = document.getElementById('new-group-name').value.trim();
         if (!name) return alert('練習会名を入力してください');
@@ -183,7 +181,6 @@ const app = {
     deleteGroup(groupName) {
         if(confirm(`「${groupName}」を削除しますか？\n※メンバーの所属情報からも解除されます。`)) {
             this.groups = this.groups.filter(g => g !== groupName);
-            // メンバーの所属情報からも該当グループを削除
             this.members.forEach(m => {
                 m.groups = m.groups.filter(g => g !== groupName);
             });
@@ -203,26 +200,22 @@ const app = {
     },
 
     updateGroupSelects() {
-        // 練習開始用セレクトボックス
         const playSelect = document.getElementById('session-group-select');
         playSelect.innerHTML = this.groups.length > 0 ? '' : '<option value="">練習会を登録してください</option>';
         this.groups.forEach(g => {
             playSelect.innerHTML += `<option value="${g}">${g}</option>`;
         });
 
-        // メンバー登録用チェックボックス
         const memberGroupsUi = document.getElementById('new-member-groups');
         memberGroupsUi.innerHTML = this.groups.map(g => `
             <label><input type="checkbox" value="${g}" class="new-member-group-chk"> ${g}</label>
         `).join('') || '<span style="color:#777; font-size:0.9rem;">先に「練習会管理」タブで練習会を作成してください。</span>';
     },
 
-    // --- メンバー管理ロジック ---
     addMember() {
         const name = document.getElementById('new-name').value.trim();
         const gender = document.getElementById('new-gender').value;
         const rank = document.getElementById('new-rank').value;
-        
         const checkedGroups = Array.from(document.querySelectorAll('.new-member-group-chk:checked')).map(cb => cb.value);
 
         if (!name) return alert('名前を入力してください');
@@ -240,7 +233,7 @@ const app = {
     },
 
     deleteMember(id) {
-        if(confirm('完全に削除しますか？（過去の履歴には名前が残りますが、データは消去されます）')) {
+        if(confirm('完全に削除しますか？')) {
             this.members = this.members.filter(m => m.id !== id);
             this.saveData();
             this.renderDatabase();
@@ -252,4 +245,118 @@ const app = {
         ui.innerHTML = this.members.map(m => `
             <div style="border-bottom: 1px solid #eee; padding: 8px 0; display: flex; justify-content: space-between; align-items: center;">
                 <div>
-                    <b>${m.name}</b> (${m.
+                    <b>${m.name}</b> (${m.gender}, Rank: ${this.getRank(m.rating)})<br>
+                    <small style="color: #666;">所属: ${m.groups.length > 0 ? m.groups.join(', ') : '所属なし'}</small>
+                </div>
+                <button class="btn-danger" style="padding: 4px 8px; font-size: 0.8rem;" onclick="app.deleteMember(${m.id})">削除</button>
+            </div>
+        `).join('') || '<p>メンバーがいません</p>';
+    },
+
+    initSession() {
+        const targetGroup = document.getElementById('session-group-select').value;
+        if (!targetGroup) return alert('練習会を選択してください。');
+
+        const courts = parseInt(document.getElementById('court-count').value);
+        let targetMembers = this.members.filter(m => m.groups.includes(targetGroup));
+        if(targetMembers.length === 0) return alert(`${targetGroup}に所属するメンバーがいません。「名簿管理」で追加してください。`);
+
+        this.members.forEach(m => { m.active = false; m.playCount = 0; });
+        targetMembers.forEach(m => m.active = true);
+
+        const now = new Date();
+        this.currentSession = {
+            date: now.toLocaleDateString(),
+            time: now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+            group: targetGroup,
+            courts: courts,
+            gameCount: 1,
+            matches: []
+        };
+
+        document.getElementById('current-session-group-name').innerText = targetGroup;
+        document.getElementById('setup-section').style.display = 'none';
+        document.getElementById('attendance-section').style.display = 'block';
+        document.getElementById('match-section').style.display = 'block';
+        this.renderAttendance();
+    },
+
+    toggleStatus(id) {
+        const m = this.members.find(m => m.id === id);
+        if (m) { m.active = !m.active; this.renderAttendance(); }
+    },
+
+    renderAttendance() {
+        const ui = document.getElementById('member-ui');
+        const sessionMembers = this.members.filter(m => m.groups.includes(this.currentSession.group));
+        ui.innerHTML = sessionMembers.map(m => `
+            <div class="toggle-btn ${m.active ? 'active' : 'inactive'}" onclick="app.toggleStatus(${m.id})">
+                ${m.name}<br><small>待機回数: ${m.playCount}</small>
+            </div>
+        `).join('');
+    },
+
+    generateMatches() {
+        if(!this.currentSession) return;
+        const activeMembers = this.members.filter(m => m.active);
+        const needed = this.currentSession.courts * 4;
+
+        if (activeMembers.length < needed) return alert(`人数が足りません（必要:${needed}人、現在参加中:${activeMembers.length}人）`);
+
+        let selected = [...activeMembers].sort((a, b) => a.playCount - b.playCount).slice(0, needed);
+        selected.forEach(p => { const m = this.members.find(x => x.id === p.id); if(m) m.playCount++; });
+        selected.sort((a, b) => b.rating - a.rating);
+
+        const ui = document.getElementById('courts-ui');
+        ui.innerHTML = '';
+        let currentMatchRecord = { game: this.currentSession.gameCount, courts: [] };
+
+        for (let i = 0; i < this.currentSession.courts; i++) {
+            const players = [selected[i], selected[i + this.currentSession.courts], selected[i + this.currentSession.courts * 2], selected[i + this.currentSession.courts * 3]];
+            currentMatchRecord.courts.push(players.map(p => p.name));
+            
+            ui.innerHTML += `
+                <div class="court-card">
+                    <h3 style="margin-top:0;">第 ${i + 1} コート</h3>
+                    ${players.map(p => `<div class="player-slot">${p.name} (${p.gender}, Rank: ${this.getRank(p.rating)})</div>`).join('')}
+                </div>
+            `;
+        }
+
+        this.currentSession.matches.push(currentMatchRecord);
+        this.renderAttendance();
+        document.getElementById('game-number').innerText = this.currentSession.gameCount++;
+    },
+
+    endSession() {
+        if(confirm('練習会を終了して記録を保存しますか？')) {
+            if(this.currentSession && this.currentSession.matches.length > 0) {
+                this.history.unshift(this.currentSession);
+                this.saveData();
+                this.renderHistory();
+            }
+            document.getElementById('setup-section').style.display = 'block';
+            document.getElementById('attendance-section').style.display = 'none';
+            document.getElementById('match-section').style.display = 'none';
+            this.currentSession = null;
+            this.switchTab('tab-history');
+        }
+    },
+
+    renderHistory() {
+        const ui = document.getElementById('history-ui');
+        ui.innerHTML = this.history.map(h => `
+            <div class="history-card">
+                <div class="history-date">${h.date} ${h.time} (${h.group}) - 全${h.matches.length}ゲーム</div>
+                <div style="font-size: 0.9rem; color: #555;">
+                    ${h.matches.map(m => `<b>Game ${m.game}:</b> ${m.courts.map((c, i) => `[C${i+1}] ${c.join(', ')}`).join(' / ')}`).join('<br>')}
+                </div>
+            </div>
+        `).join('') || '<p style="color:#777;">過去の履歴はありません。</p>';
+    }
+};
+
+window.onload = () => app.init();
+</script>
+</body>
+</html>
