@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Badminton Match Maker Pro v3.1</title>
+    <title>Badminton Match Maker Pro v3.2</title>
     <style>
         body { font-family: sans-serif; margin: 0; padding: 0; background-color: #f4f7f6; color: #333; }
         .header { background-color: #2c3e50; color: white; padding: 15px 20px; text-align: center; font-size: 1.2rem; font-weight: bold; }
@@ -18,6 +18,11 @@
         button { background-color: #3498db; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 14px; margin: 5px 0; }
         button:hover { background-color: #2980b9; }
         .btn-danger { background-color: #e74c3c; }
+        .btn-danger:hover { background-color: #c0392b; }
+        .btn-edit { background-color: #f39c12; }
+        .btn-edit:hover { background-color: #d68910; }
+        .btn-cancel { background-color: #95a5a6; }
+        .btn-cancel:hover { background-color: #7f8c8d; }
         .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 10px; }
         input[type="text"], input[type="number"], select { padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-size: 14px; }
         .toggle-btn { margin: 5px; padding: 10px; border-radius: 5px; border: 1px solid #ccc; cursor: pointer; display: inline-block; width: calc(50% - 25px); text-align: center; }
@@ -31,7 +36,7 @@
 </head>
 <body>
 
-<div class="header">🏸 Badminton Match Maker Pro v3.1</div>
+<div class="header">🏸 Badminton Match Maker Pro v3.2</div>
 <div class="tab-menu">
     <button class="tab-btn active" onclick="app.switchTab('tab-play')">今日の練習</button>
     <button class="tab-btn" onclick="app.switchTab('tab-members')">名簿管理</button>
@@ -70,7 +75,7 @@
 
     <div id="tab-members" class="tab-content">
         <div class="section">
-            <h2>新規メンバー登録</h2>
+            <h2 id="form-title">新規メンバー登録</h2>
             <div class="controls">
                 <input type="text" id="new-name" placeholder="名前" style="width: 120px;">
                 <select id="new-gender"><option value="M">男性</option><option value="F">女性</option></select>
@@ -81,7 +86,9 @@
             </div>
             <div style="margin-bottom: 5px; font-size: 0.9rem;">所属する練習会を選択:</div>
             <div class="checkbox-group" id="new-member-groups"></div>
-            <button onclick="app.addMember()" style="margin-top: 10px;">メンバーを追加</button>
+            
+            <button id="submit-member-btn" onclick="app.submitMember()" style="margin-top: 10px;">メンバーを追加</button>
+            <button id="cancel-edit-btn" class="btn-cancel" onclick="app.resetForm()" style="margin-top: 10px; display: none;">キャンセル</button>
         </div>
         <div class="section">
             <h2>登録メンバー一覧（グローバルデータ）</h2>
@@ -118,7 +125,10 @@ const app = {
     groups: [],
     history: [],
     currentSession: null,
+    editingMemberId: null,
+    
     rankToRating: { 'A': 1600, 'B': 1500, 'C': 1400, 'D': 1300 },
+    ratingToRank: { 1600: 'A', 1500: 'B', 1400: 'C', 1300: 'D' },
 
     getRank(rating) {
         if (rating >= 1550) return 'A';
@@ -156,13 +166,11 @@ const app = {
         this.updateGroupSelects();
     },
 
-    // 修正箇所：エラーの起きない堅牢なタブ切り替えロジック
     switchTab(tabId) {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
         
         document.getElementById(tabId).classList.add('active');
-        
         const activeBtn = document.querySelector(`.tab-btn[onclick="app.switchTab('${tabId}')"]`);
         if(activeBtn) activeBtn.classList.add('active');
     },
@@ -181,9 +189,7 @@ const app = {
     deleteGroup(groupName) {
         if(confirm(`「${groupName}」を削除しますか？\n※メンバーの所属情報からも解除されます。`)) {
             this.groups = this.groups.filter(g => g !== groupName);
-            this.members.forEach(m => {
-                m.groups = m.groups.filter(g => g !== groupName);
-            });
+            this.members.forEach(m => { m.groups = m.groups.filter(g => g !== groupName); });
             this.saveData();
             this.renderAll();
         }
@@ -202,9 +208,7 @@ const app = {
     updateGroupSelects() {
         const playSelect = document.getElementById('session-group-select');
         playSelect.innerHTML = this.groups.length > 0 ? '' : '<option value="">練習会を登録してください</option>';
-        this.groups.forEach(g => {
-            playSelect.innerHTML += `<option value="${g}">${g}</option>`;
-        });
+        this.groups.forEach(g => { playSelect.innerHTML += `<option value="${g}">${g}</option>`; });
 
         const memberGroupsUi = document.getElementById('new-member-groups');
         memberGroupsUi.innerHTML = this.groups.map(g => `
@@ -212,7 +216,8 @@ const app = {
         `).join('') || '<span style="color:#777; font-size:0.9rem;">先に「練習会管理」タブで練習会を作成してください。</span>';
     },
 
-    addMember() {
+    // --- メンバー追加・編集・削除ロジック ---
+    submitMember() {
         const name = document.getElementById('new-name').value.trim();
         const gender = document.getElementById('new-gender').value;
         const rank = document.getElementById('new-rank').value;
@@ -220,16 +225,70 @@ const app = {
 
         if (!name) return alert('名前を入力してください');
 
-        this.members.push({
-            id: Date.now(), name, gender, groups: checkedGroups,
-            rating: this.rankToRating[rank],
-            active: false, playCount: 0
-        });
+        if (this.editingMemberId) {
+            // 編集モード
+            const m = this.members.find(x => x.id === this.editingMemberId);
+            if (m) {
+                m.name = name;
+                m.gender = gender;
+                m.rating = this.rankToRating[rank];
+                m.groups = checkedGroups;
+            }
+        } else {
+            // 新規追加モード
+            this.members.push({
+                id: Date.now(), name, gender, groups: checkedGroups,
+                rating: this.rankToRating[rank],
+                active: false, playCount: 0
+            });
+        }
 
-        document.getElementById('new-name').value = '';
-        document.querySelectorAll('.new-member-group-chk').forEach(cb => cb.checked = false);
+        this.resetForm();
         this.saveData();
         this.renderDatabase();
+    },
+
+    editMember(id) {
+        const m = this.members.find(x => x.id === id);
+        if (!m) return;
+        
+        this.editingMemberId = id;
+        document.getElementById('form-title').innerText = 'メンバー情報の編集';
+        document.getElementById('new-name').value = m.name;
+        document.getElementById('new-gender').value = m.gender;
+        
+        // レーティングからABCDランクを逆算して選択状態にする
+        const rankValue = this.ratingToRank[m.rating] || 'C';
+        document.getElementById('new-rank').value = rankValue;
+
+        // グループのチェックボックスを復元
+        document.querySelectorAll('.new-member-group-chk').forEach(cb => {
+            cb.checked = m.groups.includes(cb.value);
+        });
+
+        // ボタンの見た目とテキストを変更
+        const submitBtn = document.getElementById('submit-member-btn');
+        submitBtn.innerText = '情報を更新する';
+        submitBtn.classList.add('btn-edit');
+        
+        document.getElementById('cancel-edit-btn').style.display = 'inline-block';
+        
+        // 画面上部へスクロール
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+
+    resetForm() {
+        this.editingMemberId = null;
+        document.getElementById('form-title').innerText = '新規メンバー登録';
+        document.getElementById('new-name').value = '';
+        document.getElementById('new-rank').value = 'C';
+        document.querySelectorAll('.new-member-group-chk').forEach(cb => cb.checked = false);
+        
+        const submitBtn = document.getElementById('submit-member-btn');
+        submitBtn.innerText = 'メンバーを追加';
+        submitBtn.classList.remove('btn-edit');
+        
+        document.getElementById('cancel-edit-btn').style.display = 'none';
     },
 
     deleteMember(id) {
@@ -243,16 +302,20 @@ const app = {
     renderDatabase() {
         const ui = document.getElementById('member-database-ui');
         ui.innerHTML = this.members.map(m => `
-            <div style="border-bottom: 1px solid #eee; padding: 8px 0; display: flex; justify-content: space-between; align-items: center;">
+            <div style="border-bottom: 1px solid #eee; padding: 10px 0; display: flex; justify-content: space-between; align-items: center;">
                 <div>
-                    <b>${m.name}</b> (${m.gender}, Rank: ${this.getRank(m.rating)})<br>
+                    <b style="font-size: 1.05rem;">${m.name}</b> (${m.gender}, Rank: ${this.getRank(m.rating)})<br>
                     <small style="color: #666;">所属: ${m.groups.length > 0 ? m.groups.join(', ') : '所属なし'}</small>
                 </div>
-                <button class="btn-danger" style="padding: 4px 8px; font-size: 0.8rem;" onclick="app.deleteMember(${m.id})">削除</button>
+                <div style="display: flex; gap: 5px;">
+                    <button class="btn-edit" style="padding: 5px 10px; font-size: 0.85rem;" onclick="app.editMember(${m.id})">編集</button>
+                    <button class="btn-danger" style="padding: 5px 10px; font-size: 0.85rem;" onclick="app.deleteMember(${m.id})">削除</button>
+                </div>
             </div>
         `).join('') || '<p>メンバーがいません</p>';
     },
 
+    // --- セッション（今日の練習）ロジック ---
     initSession() {
         const targetGroup = document.getElementById('session-group-select').value;
         if (!targetGroup) return alert('練習会を選択してください。');
