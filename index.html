@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Badminton Match Maker Pro v3.9</title>
+    <title>Badminton Match Maker Pro v4.1</title>
     <style>
         body { font-family: sans-serif; margin: 0; padding: 0; background-color: #f4f7f6; color: #333; }
         .header { background-color: #2c3e50; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
@@ -39,11 +39,18 @@
         .score-input-area { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 10px; padding-top: 10px; border-top: 1px dotted #ccc; }
         .edit-match-btn { position: absolute; top: 10px; right: 10px; background: #95a5a6; padding: 4px 8px; font-size: 0.8rem; }
         
-        .history-card { border: 1px solid #ddd; padding: 10px; border-radius: 5px; margin-bottom: 10px; }
-        .history-date { font-weight: bold; color: #3498db; margin-bottom: 5px; }
+        .history-card { border: 1px solid #ddd; padding: 15px; border-radius: 5px; margin-bottom: 15px; background: #fff; }
+        .history-date { font-weight: bold; color: #2c3e50; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 10px; }
+        .history-game { margin-bottom: 10px; padding: 10px; background: #f9f9f9; border-radius: 4px; }
+        .history-match { display: flex; align-items: center; justify-content: space-between; font-size: 0.9rem; margin-bottom: 5px; }
+        .score-box { font-weight: bold; background: #34495e; color: white; padding: 2px 8px; border-radius: 10px; }
+        .synergy-box { background: #e8f4f8; padding: 15px; border-radius: 8px; border: 1px solid #bce0ee; margin-bottom: 15px; }
         
         #qr-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; flex-direction: column; }
         #qr-modal img { max-width: 80%; max-height: 60vh; background: white; padding: 10px; border-radius: 10px; margin-bottom: 20px; }
+        
+        /* 翻訳除外用クラスの念押し設定 */
+        .notranslate { white-space: nowrap; }
     </style>
 </head>
 <body>
@@ -53,9 +60,8 @@
     <select id="lang-select" class="lang-select" onchange="app.changeLang(this.value)">
         <option value="ja">🇯🇵 日本語</option>
         <option value="en">🇺🇸 English</option>
-        <option value="id">🇮🇩 Bahasa Indonesia</option>
-        <option value="ms">🇲🇾 Bahasa Melayu</option>
         <option value="zh">🇨🇳 中文</option>
+        <option value="id">🇮🇩 Bahasa Indonesia</option>
     </select>
 </div>
 <div class="tab-menu">
@@ -84,7 +90,7 @@
 
         <div class="section" id="attendance-section" style="display:none;">
             <h2>
-                <span><span data-i18n="attendance_mgmt">出欠・集金管理</span> (<span id="current-session-group-name"></span>)</span>
+                <span><span data-i18n="attendance_mgmt">出欠・集金管理</span> (<span id="current-session-group-name" translate="no" class="notranslate"></span>)</span>
                 <button id="qr-link-btn" class="btn-pay" style="display:none; font-size: 0.8rem;" onclick="app.showQR()" data-i18n="btn_show_qr">📱 支払いQRを表示</button>
             </h2>
             <div style="margin-bottom: 15px; background: #ecf0f1; padding: 10px; border-radius: 5px;">
@@ -121,7 +127,7 @@
         <div class="section">
             <h2 id="form-title" data-i18n="reg_member">新規メンバー登録</h2>
             <div class="controls">
-                <input type="text" id="new-name" placeholder="Name" style="width: 120px;">
+                <input type="text" id="new-name" placeholder="Name" style="width: 120px;" translate="no">
                 <select id="new-gender">
                     <option value="M" data-i18n="male">男性</option>
                     <option value="F" data-i18n="female">女性</option>
@@ -145,7 +151,7 @@
         <div class="section">
             <h2 data-i18n="club_mgmt">所属クラブ管理 (メンバーの属性)</h2>
             <div class="controls">
-                <input type="text" id="new-club-name" placeholder="Club Name" style="width: 150px;">
+                <input type="text" id="new-club-name" placeholder="Club Name" style="width: 150px;" translate="no">
                 <button onclick="app.addClub()" data-i18n="btn_add_club">クラブを追加</button>
             </div>
             <div id="club-list-ui" style="margin-top: 10px;"></div>
@@ -154,7 +160,7 @@
         <div class="section" style="border-top: 2px solid #3498db; padding-top: 20px;">
             <h2 id="group-form-title" data-i18n="add_group">開催する練習会の管理 (開催場所・決済)</h2>
             <div class="controls" style="flex-direction: column; align-items: flex-start;">
-                <div><input type="text" id="new-group-name" placeholder="Session Name" style="width: 250px;"></div>
+                <div><input type="text" id="new-group-name" placeholder="Session Name" style="width: 250px;" translate="no"></div>
                 <div style="font-size: 0.9rem; color: #555; margin-top: 5px;" data-i18n="qr_upload">決済用QRコード画像 (任意):</div>
                 <div style="display: flex; gap: 10px; align-items: center;">
                     <input type="file" id="new-group-qr" accept="image/*" style="font-size: 0.9rem;">
@@ -171,14 +177,21 @@
 
     <div id="tab-history" class="tab-content">
         <div class="section">
-            <h2 data-i18n="history_title">練習会履歴</h2>
-            <div id="history-ui"></div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2 data-i18n="history_title" style="border:none; margin:0; padding:0;">練習会履歴</h2>
+                <div>
+                    <label style="font-size: 0.9rem; margin-right: 5px;" data-i18n="filter_member">メンバー検索:</label>
+                    <select id="history-member-filter" onchange="app.renderHistory()" style="padding: 5px;"></select>
+                </div>
+            </div>
+            <div id="history-ui" style="margin-top: 15px;"></div>
         </div>
     </div>
 
 </div>
 
 <script>
+// --- i18n 多言語辞書 ---
 const dict = {
     ja: {
         tab_play: "今日の練習", tab_members: "名簿管理", tab_groups: "クラブ・練習会管理", tab_history: "過去の履歴",
@@ -191,28 +204,66 @@ const dict = {
         btn_add_member: "メンバーを追加", btn_update: "情報を更新する", btn_cancel: "キャンセル",
         member_list: "登録メンバー一覧", club_mgmt: "所属クラブ管理", btn_add_club: "クラブを追加",
         add_group: "開催する練習会の管理", edit_group: "練習会情報の編集", qr_upload: "決済用QRコード画像 (任意):",
-        btn_add_group: "練習会を追加", history_title: "練習会履歴", btn_close: "閉じる",
+        btn_add_group: "練習会を追加", history_title: "練習会履歴", filter_member: "メンバー検索:", btn_close: "閉じる",
         status_present: "出席", status_absent: "休み", pay_done: "集金済", pay_wait: "未納",
         play_count: "試合数", no_members: "メンバーがいません", no_groups: "データがありません",
-        btn_edit: "編集", btn_delete: "削除", court: "コート", register_score: "結果登録", registered: "✓ スコア登録完了",
-        edit_players: "✍️ メンバー変更", save_players: "💾 変更を確定", all_clubs: "すべて表示"
+        btn_edit: "編集", btn_delete: "削除", court: "コート", register_score: "結果登録", registered: "✓ スコア保存済",
+        edit_players: "✍️ メンバー変更", save_players: "💾 変更を確定", all_clubs: "すべて表示", all_members: "全員を表示",
+        synergy_ranking: "相性ランキング (シナジー効果)", best_partners: "相性の良いペア (上位5)", worst_partners: "シナジーが発揮しにくいペア (下位5)"
     },
     en: {
-        tab_play: "Today's Session", tab_members: "Members", tab_groups: "Clubs/Sessions", tab_history: "History",
+        tab_play: "Play Today", tab_members: "Members", tab_groups: "Clubs/Sessions", tab_history: "History",
         start_session: "Start Session", courts: "Courts:", btn_attendance: "Take Attendance",
-        attendance_mgmt: "Attendance & Payment", btn_show_qr: "📱 Show QR", filter_club: "Filter by Club:",
+        attendance_mgmt: "Attendance & Payment", btn_show_qr: "📱 Show QR", filter_club: "Filter Club:",
         match_settings: "Match Settings", mode_select: "Mode:",
-        mode_even: "Even Power (Ignore Gender / Dispersed)", mode_level_power: "Level-based (Ignore Gender)", mode_level_mixed: "Level-based (Prioritize Mixed)",
+        mode_even: "Even Power (Dispersed)", mode_level_power: "Level-based (Ignore Gender)", mode_level_mixed: "Level-based (Prioritize Mixed)",
         btn_generate: "Generate Matches", current_games: "Current Games", btn_end_session: "End Session & Save",
         reg_member: "Register Member", edit_member: "Edit Member", male: "Male", female: "Female", club_none: "No Club",
         btn_add_member: "Add Member", btn_update: "Update Info", btn_cancel: "Cancel",
         member_list: "Member List", club_mgmt: "Club Management", btn_add_club: "Add Club",
-        add_group: "Session Management", edit_group: "Edit Session Info", qr_upload: "Payment QR (Optional):",
-        btn_add_group: "Add Session", history_title: "Session History", btn_close: "Close",
+        add_group: "Session Management", edit_group: "Edit Session", qr_upload: "Payment QR (Optional):",
+        btn_add_group: "Add Session", history_title: "Session History", filter_member: "Search Member:", btn_close: "Close",
         status_present: "Present", status_absent: "Rest", pay_done: "Paid", pay_wait: "Unpaid",
         play_count: "Games", no_members: "No members found.", no_groups: "No data.",
         btn_edit: "Edit", btn_delete: "Delete", court: "Court", register_score: "Submit Score", registered: "✓ Score Saved",
-        edit_players: "✍️ Edit Players", save_players: "💾 Save Changes", all_clubs: "Show All"
+        edit_players: "✍️ Edit Players", save_players: "💾 Save Changes", all_clubs: "Show All", all_members: "All Members",
+        synergy_ranking: "Synergy Ranking", best_partners: "Top 5 Best Partners", worst_partners: "Bottom 5 (Low Synergy)"
+    },
+    zh: {
+        tab_play: "今日练习", tab_members: "成员管理", tab_groups: "俱乐部/活动", tab_history: "历史记录",
+        start_session: "开始练习", courts: "场地数:", btn_attendance: "考勤打卡",
+        attendance_mgmt: "出勤与收款", btn_show_qr: "📱 显示收款码", filter_club: "筛选俱乐部:",
+        match_settings: "比赛设置", mode_select: "模式选择:",
+        mode_even: "实力均衡 (不分性别)", mode_level_power: "按水平分组 (不分性别)", mode_level_mixed: "按水平分组 (优先混双)",
+        btn_generate: "生成下一轮对阵", current_games: "进行中的比赛", btn_end_session: "结束练习并保存",
+        reg_member: "注册新成员", edit_member: "编辑成员", male: "男", female: "女", club_none: "无俱乐部",
+        btn_add_member: "添加成员", btn_update: "更新信息", btn_cancel: "取消",
+        member_list: "成员列表", club_mgmt: "俱乐部管理", btn_add_club: "添加俱乐部",
+        add_group: "活动管理", edit_group: "编辑活动", qr_upload: "收款二维码 (可选):",
+        btn_add_group: "添加活动", history_title: "历史记录", filter_member: "搜索成员:", btn_close: "关闭",
+        status_present: "出勤", status_absent: "休息", pay_done: "已付", pay_wait: "未付",
+        play_count: "比赛次数", no_members: "没有成员", no_groups: "没有数据",
+        btn_edit: "编辑", btn_delete: "删除", court: "场地", register_score: "提交比分", registered: "✓ 比分已保存",
+        edit_players: "✍️ 调整人员", save_players: "💾 确认修改", all_clubs: "显示全部", all_members: "所有人",
+        synergy_ranking: "默契度 (协同) 排名", best_partners: "最佳搭档 (Top 5)", worst_partners: "需注意搭档 (后 5)"
+    },
+    id: {
+        tab_play: "Main Hari Ini", tab_members: "Anggota", tab_groups: "Klub/Sesi", tab_history: "Riwayat",
+        start_session: "Mulai Sesi", courts: "Lap:", btn_attendance: "Kehadiran",
+        attendance_mgmt: "Kehadiran & Bayar", btn_show_qr: "📱 Tampilkan QR", filter_club: "Filter Klub:",
+        match_settings: "Pengaturan Laga", mode_select: "Mode:",
+        mode_even: "Kekuatan Merata", mode_level_power: "Berdasarkan Level", mode_level_mixed: "Level (Campuran)",
+        btn_generate: "Buat Laga Berikutnya", current_games: "Laga Saat Ini", btn_end_session: "Akhiri & Simpan",
+        reg_member: "Daftar Anggota", edit_member: "Edit Anggota", male: "Pria", female: "Wanita", club_none: "Tanpa Klub",
+        btn_add_member: "Tambah Anggota", btn_update: "Perbarui", btn_cancel: "Batal",
+        member_list: "Daftar Anggota", club_mgmt: "Kelola Klub", btn_add_club: "Tambah Klub",
+        add_group: "Kelola Sesi", edit_group: "Edit Sesi", qr_upload: "QR Pembayaran (Opsional):",
+        btn_add_group: "Tambah Sesi", history_title: "Riwayat Sesi", filter_member: "Cari Anggota:", btn_close: "Tutup",
+        status_present: "Hadir", status_absent: "Istirahat", pay_done: "Lunas", pay_wait: "Belum",
+        play_count: "Main", no_members: "Tidak ada anggota.", no_groups: "Tidak ada data.",
+        btn_edit: "Edit", btn_delete: "Hapus", court: "Lap", register_score: "Simpan Skor", registered: "✓ Skor Disimpan",
+        edit_players: "✍️ Edit Pemain", save_players: "💾 Simpan", all_clubs: "Semua", all_members: "Semua Anggota",
+        synergy_ranking: "Peringkat Sinergi", best_partners: "Pasangan Terbaik (Top 5)", worst_partners: "Perlu Penyesuaian (Bawah 5)"
     }
 };
 
@@ -233,9 +284,12 @@ const app = {
 
     changeLang(newLang) {
         this.lang = newLang; localStorage.setItem('bm_lang', newLang);
+        document.documentElement.lang = newLang;
         document.querySelectorAll('[data-i18n]').forEach(el => { el.innerText = this.t(el.getAttribute('data-i18n')); });
-        this.renderAll();
-        if(this.currentSession) { this.renderAttendance(); this.renderMatches(); }
+        if (this.members.length > 0 || this.groups.length > 0) {
+            this.renderAll();
+            if(this.currentSession) { this.renderAttendance(); this.renderMatches(); }
+        }
     },
 
     getRank(rating) {
@@ -244,35 +298,21 @@ const app = {
     },
 
     init() {
-        const savedLang = localStorage.getItem('bm_lang');
-        if (savedLang) { this.lang = savedLang; document.getElementById('lang-select').value = savedLang; }
-        this.changeLang(this.lang); 
-
         const savedMembers = localStorage.getItem('bm_members_v4');
         const savedClubs = localStorage.getItem('bm_clubs_v4');
         const savedGroups = localStorage.getItem('bm_groups_v4');
         const savedHistory = localStorage.getItem('bm_history_v4');
         
-        // v3からのマイグレーション
-        if (!savedMembers && localStorage.getItem('bm_members_v3')) {
-            this.members = JSON.parse(localStorage.getItem('bm_members_v3'));
-            let extractedClubs = new Set();
-            this.members.forEach(m => {
-                if(m.groups && m.groups.length > 0) { m.club = m.groups[0]; extractedClubs.add(m.club); } else { m.club = ''; }
-                delete m.groups;
-            });
-            this.clubs = Array.from(extractedClubs);
-            this.groups = JSON.parse(localStorage.getItem('bm_groups_v3') || '[]').map(g => typeof g === 'string' ? {name: g, qrData: ''} : g);
-            this.history = JSON.parse(localStorage.getItem('bm_history_v3') || '[]');
-            this.saveData(); // 新形式で保存
-        } else {
-            if (savedMembers) this.members = JSON.parse(savedMembers);
-            if (savedClubs) this.clubs = JSON.parse(savedClubs);
-            if (savedGroups) this.groups = JSON.parse(savedGroups);
-            if (savedHistory) this.history = JSON.parse(savedHistory);
-        }
+        if (savedMembers) this.members = JSON.parse(savedMembers);
+        if (savedClubs) this.clubs = JSON.parse(savedClubs);
+        if (savedGroups) this.groups = JSON.parse(savedGroups);
+        if (savedHistory) this.history = JSON.parse(savedHistory);
 
-        this.members.forEach(m => { if (!m.rating) m.rating = 1400; if(!m.club) m.club = ''; });
+        this.members.forEach(m => { 
+            if (!m.rating) m.rating = 1400; 
+            if (!m.club) m.club = ''; 
+            if (!m.synergies) m.synergies = {}; 
+        });
 
         document.getElementById('new-group-qr').addEventListener('change', (e) => {
             const file = e.target.files[0]; if (!file) return;
@@ -293,7 +333,9 @@ const app = {
             reader.readAsDataURL(file);
         });
         
-        this.renderAll();
+        const savedLang = localStorage.getItem('bm_lang');
+        if (savedLang) { this.lang = savedLang; document.getElementById('lang-select').value = savedLang; }
+        this.changeLang(this.lang); 
     },
 
     saveData() {
@@ -307,8 +349,8 @@ const app = {
         this.renderClubs();
         this.renderGroups();
         this.renderDatabase();
-        this.renderHistory();
         this.updateSelects();
+        this.renderHistory();
     },
 
     switchTab(tabId) {
@@ -319,7 +361,7 @@ const app = {
         if(activeBtn) activeBtn.classList.add('active');
     },
 
-    // --- クラブ管理 ---
+    // --- クラブ・練習会管理 ---
     addClub() {
         const name = document.getElementById('new-club-name').value.trim();
         if (!name || this.clubs.includes(name)) return;
@@ -338,12 +380,10 @@ const app = {
         const ui = document.getElementById('club-list-ui');
         ui.innerHTML = this.clubs.map(c => `
             <div style="border-bottom: 1px solid #eee; padding: 5px 0; display: flex; justify-content: space-between;">
-                <span>${c}</span> <button class="btn-danger" style="padding: 2px 5px; font-size: 0.8rem;" onclick="app.deleteClub('${c}')">${this.t('btn_delete')}</button>
+                <span translate="no" class="notranslate">${c}</span> <button class="btn-danger" style="padding: 2px 5px; font-size: 0.8rem;" onclick="app.deleteClub('${c}')">${this.t('btn_delete')}</button>
             </div>
         `).join('') || `<p style="color:#777;">${this.t('no_groups')}</p>`;
     },
-
-    // --- 練習会(Group)管理 ---
     submitGroup() {
         const name = document.getElementById('new-group-name').value.trim();
         if (!name) return;
@@ -392,7 +432,7 @@ const app = {
             <div style="border-bottom: 1px solid #eee; padding: 10px 0; display: flex; justify-content: space-between; align-items: center;">
                 <div style="display:flex; align-items:center; gap: 10px;">
                     ${g.qrData ? `<img src="${g.qrData}" style="height:30px; border-radius:4px; border:1px solid #ddd;">` : `<div style="width:30px;height:30px;background:#eee;border-radius:4px;font-size:0.5rem;display:flex;align-items:center;justify-content:center;color:#999;">No QR</div>`}
-                    <div><b>${g.name}</b></div>
+                    <div><b translate="no" class="notranslate">${g.name}</b></div>
                 </div>
                 <div style="display: flex; gap: 5px;">
                     <button class="btn-edit" style="padding: 4px 8px; font-size: 0.8rem;" onclick="app.editGroup('${g.name}')">${this.t('btn_edit')}</button>
@@ -402,20 +442,22 @@ const app = {
         `).join('') || `<p style="color:#777;">${this.t('no_groups')}</p>`;
     },
 
-    // --- 共通セレクトボックス更新 ---
     updateSelects() {
-        // クラブ選択（名簿登録用）
         const clubSelect = document.getElementById('new-club-select');
-        clubSelect.innerHTML = `<option value="">-- ${this.t('club_none')} --</option>` + this.clubs.map(c => `<option value="${c}">${c}</option>`).join('');
+        clubSelect.innerHTML = `<option value="">-- ${this.t('club_none')} --</option>` + this.clubs.map(c => `<option value="${c}" translate="no" class="notranslate">${c}</option>`).join('');
         
-        // 出欠フィルター用
         const filterSelect = document.getElementById('attendance-filter-club');
-        filterSelect.innerHTML = `<option value="">-- ${this.t('all_clubs')} --</option>` + this.clubs.map(c => `<option value="${c}">${c}</option>`).join('');
+        filterSelect.innerHTML = `<option value="">-- ${this.t('all_clubs')} --</option>` + this.clubs.map(c => `<option value="${c}" translate="no" class="notranslate">${c}</option>`).join('');
 
-        // 練習会選択（セッション開始用）
         const playSelect = document.getElementById('session-group-select');
         playSelect.innerHTML = this.groups.length > 0 ? '' : `<option value="">--</option>`;
-        this.groups.forEach(g => { playSelect.innerHTML += `<option value="${g.name}">${g.name}</option>`; });
+        this.groups.forEach(g => { playSelect.innerHTML += `<option value="${g.name}" translate="no" class="notranslate">${g.name}</option>`; });
+
+        const historyMemberFilter = document.getElementById('history-member-filter');
+        const currentSelection = historyMemberFilter.value;
+        historyMemberFilter.innerHTML = `<option value="">-- ${this.t('all_members')} --</option>` + 
+            this.members.map(m => `<option value="${m.id}" translate="no" class="notranslate">${m.name}</option>`).join('');
+        if(currentSelection) historyMemberFilter.value = currentSelection;
     },
 
     // --- 名簿管理 ---
@@ -430,13 +472,388 @@ const app = {
             const m = this.members.find(x => x.id === this.editingMemberId);
             if (m) { m.name = name; m.gender = gender; m.rating = this.rankToRating[rank]; m.club = club; }
         } else {
-            this.members.push({ id: Date.now(), name, gender, club: club, rating: this.rankToRating[rank], active: false, playCount: 0 });
+            this.members.push({ id: Date.now(), name, gender, club: club, rating: this.rankToRating[rank], synergies: {}, active: false, playCount: 0 });
         }
-        this.resetForm(); this.saveData(); this.renderDatabase();
+        this.resetForm(); this.saveData(); this.renderDatabase(); this.updateSelects();
     },
     editMember(id) {
         const m = this.members.find(x => x.id === id);
         if (!m) return;
         this.editingMemberId = id;
-        document.getElementById('form-title').
+        document.getElementById('form-title').innerText = this.t('edit_member');
+        document.getElementById('new-name').value = m.name; document.getElementById('new-gender').value = m.gender;
+        document.getElementById('new-rank').value = this.ratingToRank[m.rating] || this.getRank(m.rating);
+        document.getElementById('new-club-select').value = m.club || '';
+        
+        const submitBtn = document.getElementById('submit-member-btn');
+        submitBtn.innerText = this.t('btn_update'); submitBtn.classList.add('btn-edit');
+        document.getElementById('cancel-edit-btn').style.display = 'inline-block';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+    resetForm() {
+        this.editingMemberId = null;
+        document.getElementById('form-title').innerText = this.t('reg_member');
+        document.getElementById('new-name').value = ''; document.getElementById('new-rank').value = 'C';
+        document.getElementById('new-club-select').value = '';
+        const submitBtn = document.getElementById('submit-member-btn');
+        submitBtn.innerText = this.t('btn_add_member'); submitBtn.classList.remove('btn-edit');
+        document.getElementById('cancel-edit-btn').style.display = 'none';
+    },
+    deleteMember(id) {
+        if(confirm('Delete?')) { this.members = this.members.filter(m => m.id !== id); this.saveData(); this.renderDatabase(); this.updateSelects(); }
+    },
+    renderDatabase() {
+        const ui = document.getElementById('member-database-ui');
+        ui.innerHTML = this.members.map(m => `
+            <div style="border-bottom: 1px solid #eee; padding: 10px 0; display: flex; justify-content: space-between; align-items: center;">
+                <div><b translate="no" class="notranslate">${m.name}</b> (${m.gender}, Rank: ${this.getRank(m.rating)}, Rate: ${Math.round(m.rating)})<br><small style="color: #666;">Club: <span translate="no" class="notranslate">${m.club || '-'}</span></small></div>
+                <div style="display: flex; gap: 5px;">
+                    <button class="btn-edit" style="padding: 5px 10px;" onclick="app.editMember(${m.id})">${this.t('btn_edit')}</button>
+                    <button class="btn-danger" style="padding: 5px 10px;" onclick="app.deleteMember(${m.id})">${this.t('btn_delete')}</button>
+                </div>
+            </div>
+        `).join('') || `<p>${this.t('no_members')}</p>`;
+    },
+
+    // --- 今日の練習（セッション） ---
+    initSession() {
+        const targetGroupName = document.getElementById('session-group-select').value;
+        if (!targetGroupName) return;
+        const targetGroupObj = this.groups.find(g => g.name === targetGroupName);
+        const courts = parseInt(document.getElementById('court-count').value);
+        
+        this.members.forEach(m => { m.active = false; m.playCount = 0; });
+
+        const now = new Date();
+        this.currentSession = {
+            date: now.toLocaleDateString(), time: now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+            group: targetGroupName, qrData: targetGroupObj ? targetGroupObj.qrData : '',
+            courts: courts, gameCount: 1, matches: [], payments: {} 
+        };
+
+        document.getElementById('current-session-group-name').innerText = targetGroupName;
+        document.getElementById('qr-link-btn').style.display = this.currentSession.qrData ? 'inline-block' : 'none';
+        document.getElementById('setup-section').style.display = 'none';
+        document.getElementById('attendance-section').style.display = 'block';
+        document.getElementById('match-section').style.display = 'block';
+        this.renderAttendance();
+    },
+
+    showQR() {
+        if(this.currentSession && this.currentSession.qrData) {
+            document.getElementById('qr-modal-img').src = this.currentSession.qrData;
+            document.getElementById('qr-modal').style.display = 'flex';
+        }
+    },
+
+    toggleStatus(id) {
+        const m = this.members.find(m => m.id === id);
+        if (m) { 
+            const isJoining = !m.active;
+            m.active = isJoining; 
+            if (isJoining && this.currentSession && this.currentSession.gameCount > 1) {
+                const activeMembers = this.members.filter(x => x.active && x.id !== id);
+                if (activeMembers.length > 0) {
+                    const minPlayCount = Math.min(...activeMembers.map(x => x.playCount));
+                    if (m.playCount < minPlayCount) m.playCount = minPlayCount;
+                }
+            }
+            this.renderAttendance(); 
+        }
+    },
+    
+    togglePayment(id) {
+        if(this.currentSession) { this.currentSession.payments[id] = !this.currentSession.payments[id]; this.renderAttendance(); }
+    },
+
+    renderAttendance() {
+        const ui = document.getElementById('member-ui');
+        const filter = document.getElementById('attendance-filter-club').value;
+        
+        const displayMembers = this.members.filter(m => (filter === '' || m.club === filter || m.active));
+        
+        ui.innerHTML = displayMembers.map(m => `
+            <div class="member-card">
+                <div style="font-weight: bold; font-size: 1.05rem; margin-bottom: 5px;"><span translate="no" class="notranslate">${m.name}</span> <span style="font-size:0.8rem; color:#888;">(${this.getRank(m.rating)})</span></div>
+                <div style="font-size: 0.8rem; color: #666; margin-bottom: 8px;">${this.t('play_count')}: ${m.playCount}</div>
+                <button class="status-btn ${m.active ? 'status-active' : 'status-inactive'}" onclick="app.toggleStatus(${m.id})">${m.active ? this.t('status_present') : this.t('status_absent')}</button>
+                ${m.active ? `<button class="status-btn ${this.currentSession.payments[m.id] ? 'pay-done' : 'pay-wait'}" onclick="app.togglePayment(${m.id})">${this.currentSession.payments[m.id] ? this.t('pay_done') : this.t('pay_wait')}</button>` : ''}
+            </div>
+        `).join('');
+    },
+
+    getBestPairing(players, mode) {
+        const patterns = [
+            { t1: [0, 1], t2: [2, 3] }, { t1: [0, 2], t2: [1, 3] }, { t1: [0, 3], t2: [1, 2] }
+        ];
+        let bestPattern = patterns[0];
+        let bestScore = -Infinity;
+
+        const getS = (pA, pB) => (pA.synergies && pA.synergies[pB.id]) ? pA.synergies[pB.id] : 0;
+
+        patterns.forEach(p => {
+            const p1 = players[p.t1[0]], p2 = players[p.t1[1]];
+            const p3 = players[p.t2[0]], p4 = players[p.t2[1]];
             
+            const rT1 = (p1.rating + p2.rating) / 2 + getS(p1, p2);
+            const rT2 = (p3.rating + p4.rating) / 2 + getS(p3, p4);
+            const diff = Math.abs(rT1 - rT2);
+            
+            let score = -diff; 
+            if (mode === 'level_mixed') {
+                let mixedCount = 0;
+                if (p1.gender !== p2.gender) mixedCount++;
+                if (p3.gender !== p4.gender) mixedCount++;
+                score += mixedCount * 1000; 
+            }
+            if (score > bestScore) { bestScore = score; bestPattern = p; }
+        });
+
+        return [ players[bestPattern.t1[0]], players[bestPattern.t1[1]], players[bestPattern.t2[0]], players[bestPattern.t2[1]] ];
+    },
+
+    generateMatches() {
+        if(!this.currentSession) return;
+        const activeMembers = this.members.filter(m => m.active);
+        const needed = this.currentSession.courts * 4;
+        if (activeMembers.length < needed) return alert('Not enough players');
+
+        let selected = [...activeMembers].sort((a, b) => a.playCount - b.playCount).slice(0, needed);
+        selected.forEach(p => { const m = this.members.find(x => x.id === p.id); if(m) m.playCount++; });
+        selected.sort((a, b) => b.rating - a.rating);
+
+        const mode = document.getElementById('match-mode-select').value;
+        let currentMatchRecord = { game: this.currentSession.gameCount, courts: [] };
+        let courtPlayersList = [];
+
+        if (mode === 'even_power') {
+            courtPlayersList = Array.from({length: this.currentSession.courts}, () => []);
+            for (let i = 0; i < selected.length; i++) {
+                let cycle = Math.floor(i / this.currentSession.courts);
+                let rem = i % this.currentSession.courts;
+                let courtIdx = (cycle % 2 === 0) ? rem : (this.currentSession.courts - 1 - rem);
+                courtPlayersList[courtIdx].push(selected[i]);
+            }
+        } else {
+            for (let i = 0; i < this.currentSession.courts; i++) {
+                courtPlayersList.push([ selected[i * 4], selected[i * 4 + 1], selected[i * 4 + 2], selected[i * 4 + 3] ]);
+            }
+        }
+
+        for (let i = 0; i < this.currentSession.courts; i++) {
+            let players = this.getBestPairing(courtPlayersList[i], mode);
+            currentMatchRecord.courts.push({ 
+                team1: [players[0].id, players[1].id], 
+                team2: [players[2].id, players[3].id], 
+                names: players.map(p => p.name),
+                score1: null, score2: null, isRegistered: false 
+            });
+        }
+
+        this.currentSession.matches.push(currentMatchRecord);
+        this.isEditingMatch = false; 
+        this.renderAttendance();
+        this.renderMatches();
+        document.getElementById('game-number').innerText = ++this.currentSession.gameCount;
+    },
+
+    toggleEditMatch() {
+        this.isEditingMatch = !this.isEditingMatch;
+        this.renderMatches();
+    },
+
+    changePlayer(courtIdx, teamIdx, posIdx, newPlayerIdStr) {
+        const newId = parseInt(newPlayerIdStr);
+        const matchRecord = this.currentSession.matches[this.currentSession.matches.length - 1];
+        const newPlayer = this.members.find(m => m.id === newId);
+        if(!newPlayer) return;
+        const teamKey = teamIdx === 1 ? 'team1' : 'team2';
+        matchRecord.courts[courtIdx][teamKey][posIdx] = newId;
+        const flatIndex = (teamIdx === 1) ? posIdx : (2 + posIdx);
+        matchRecord.courts[courtIdx].names[flatIndex] = newPlayer.name;
+    },
+
+    renderMatches() {
+        const ui = document.getElementById('courts-ui');
+        if(!this.currentSession || this.currentSession.matches.length === 0) { ui.innerHTML = ''; return; }
+        
+        const matchRecord = this.currentSession.matches[this.currentSession.matches.length - 1];
+        ui.innerHTML = '';
+
+        matchRecord.courts.forEach((c, i) => {
+            let p = c.team1.concat(c.team2).map(id => this.members.find(m => m.id === id) || {name: 'Unknown', rating: 1400});
+            let playerHtml = (pObj, team, pos) => {
+                if(this.isEditingMatch) {
+                    const options = this.members.filter(m => m.active || m.id === pObj.id).map(m => 
+                        `<option value="${m.id}" ${m.id === pObj.id ? 'selected' : ''} translate="no" class="notranslate">${m.name} (${this.getRank(m.rating)})</option>`
+                    ).join('');
+                    return `<select onchange="app.changePlayer(${i}, ${team}, ${pos}, this.value)" style="max-width: 120px; font-size:0.9rem;">${options}</select>`;
+                } else {
+                    return `<span translate="no" class="notranslate">${pObj.name}</span> <span style="font-size:0.75rem; color:#888;">(${this.getRank(pObj.rating)})</span>`;
+                }
+            };
+
+            ui.innerHTML += `
+                <div class="court-card" id="court-card-${i}">
+                    ${i === 0 ? `<button class="edit-match-btn" onclick="app.toggleEditMatch()">${this.isEditingMatch ? this.t('save_players') : this.t('edit_players')}</button>` : ''}
+                    <h3 style="margin-top:0;">${this.t('court')} ${i + 1}</h3>
+                    <div class="team-box"><b>Team 1:</b> ${playerHtml(p[0], 1, 0)} & ${playerHtml(p[1], 1, 1)}</div>
+                    <div style="text-align:center; font-size:0.8rem; color:#888;">VS</div>
+                    <div class="team-box"><b>Team 2:</b> ${playerHtml(p[2], 2, 0)} & ${playerHtml(p[3], 2, 1)}</div>
+                    
+                    ${!this.isEditingMatch ? `
+                    <div class="score-input-area" id="score-area-${i}">
+                        ${c.isRegistered ? `<span style="color:#2ecc71; font-weight:bold;">${this.t('registered')} (${c.score1} - ${c.score2})</span>` : `
+                        <input type="number" id="score_t1_${i}" placeholder="T1" style="width: 50px;"> - 
+                        <input type="number" id="score_t2_${i}" placeholder="T2" style="width: 50px;">
+                        <button class="btn-success" onclick="app.registerScore(${i})">${this.t('register_score')}</button>
+                        `}
+                    </div>` : ''}
+                </div>
+            `;
+        });
+    },
+
+    registerScore(courtIndex) {
+        const score1 = parseInt(document.getElementById(`score_t1_${courtIndex}`).value);
+        const score2 = parseInt(document.getElementById(`score_t2_${courtIndex}`).value);
+        if (isNaN(score1) || isNaN(score2)) return;
+
+        const matchRecord = this.currentSession.matches[this.currentSession.matches.length - 1];
+        const courtData = matchRecord.courts[courtIndex];
+        
+        courtData.score1 = score1; courtData.score2 = score2; courtData.isRegistered = true;
+
+        const t1_p1 = this.members.find(m => m.id === courtData.team1[0]); const t1_p2 = this.members.find(m => m.id === courtData.team1[1]);
+        const t2_p1 = this.members.find(m => m.id === courtData.team2[0]); const t2_p2 = this.members.find(m => m.id === courtData.team2[1]);
+        if(!t1_p1 || !t1_p2 || !t2_p1 || !t2_p2) return;
+
+        const getS = (pA, pB) => (pA.synergies && pA.synergies[pB.id]) ? pA.synergies[pB.id] : 0;
+
+        const r1 = (t1_p1.rating + t1_p2.rating) / 2 + getS(t1_p1, t1_p2); 
+        const r2 = (t2_p1.rating + t2_p2.rating) / 2 + getS(t2_p1, t2_p2);
+        
+        const expected1 = 1 / (1 + Math.pow(10, (r2 - r1) / 400)); 
+        const expected2 = 1 / (1 + Math.pow(10, (r1 - r2) / 400));
+        
+        let actual1, actual2;
+        const pointDiff = Math.abs(score1 - score2);
+        const marginMultiplier = Math.log(pointDiff + 1) * 0.5 + 0.5; 
+
+        if (score1 > score2) { actual1 = 1; actual2 = 0; } 
+        else if (score1 < score2) { actual1 = 0; actual2 = 1; } 
+        else { actual1 = 0.5; actual2 = 0.5; }
+
+        const delta1 = this.K_FACTOR * marginMultiplier * (actual1 - expected1);
+        const delta2 = this.K_FACTOR * marginMultiplier * (actual2 - expected2);
+
+        t1_p1.rating += delta1 * 0.5; t1_p2.rating += delta1 * 0.5;
+        t2_p1.rating += delta2 * 0.5; t2_p2.rating += delta2 * 0.5;
+
+        t1_p1.synergies[t1_p2.id] = getS(t1_p1, t1_p2) + delta1 * 0.5;
+        t1_p2.synergies[t1_p1.id] = getS(t1_p2, t1_p1) + delta1 * 0.5;
+        t2_p1.synergies[t2_p2.id] = getS(t2_p1, t2_p2) + delta2 * 0.5;
+        t2_p2.synergies[t2_p1.id] = getS(t2_p2, t2_p1) + delta2 * 0.5;
+
+        this.saveData(); this.renderMatches(); 
+    },
+
+    endSession() {
+        if(confirm('End Session?')) {
+            if(this.currentSession && this.currentSession.matches.length > 0) {
+                this.history.unshift(this.currentSession);
+                this.saveData(); this.renderHistory();
+            }
+            document.getElementById('setup-section').style.display = 'block';
+            document.getElementById('attendance-section').style.display = 'none';
+            document.getElementById('match-section').style.display = 'none';
+            this.currentSession = null;
+            this.switchTab('tab-history');
+        }
+    },
+
+    renderHistory() {
+        const ui = document.getElementById('history-ui');
+        const filterId = document.getElementById('history-member-filter').value;
+        
+        let rankingHtml = '';
+        let filteredHistory = [];
+
+        if (!filterId) {
+            filteredHistory = this.history;
+        } else {
+            const memberId = parseInt(filterId);
+            
+            this.history.forEach(session => {
+                let sessionCopy = { ...session, matches: [] };
+                session.matches.forEach(game => {
+                    let gameCopy = { ...game, courts: [] };
+                    game.courts.forEach(court => {
+                        if (court.team1.includes(memberId) || court.team2.includes(memberId)) {
+                            gameCopy.courts.push(court);
+                        }
+                    });
+                    if (gameCopy.courts.length > 0) sessionCopy.matches.push(gameCopy);
+                });
+                if (sessionCopy.matches.length > 0) filteredHistory.push(sessionCopy);
+            });
+
+            const m = this.members.find(x => x.id === memberId);
+            if (m && m.synergies) {
+                const partners = Object.keys(m.synergies).map(pid => {
+                    const partner = this.members.find(x => x.id == pid);
+                    return { name: partner ? partner.name : 'Unknown', val: m.synergies[pid] };
+                }).filter(p => p.name !== 'Unknown').sort((a, b) => b.val - a.val);
+                
+                const top5 = partners.filter(p => p.val > 0).slice(0, 5);
+                const bottom5 = partners.filter(p => p.val < 0).reverse().slice(0, 5); 
+                
+                if (top5.length > 0 || bottom5.length > 0) {
+                    rankingHtml = `
+                        <div class="synergy-box">
+                            <h4 style="margin-top:0; color:#2c3e50;">📊 ${this.t('synergy_ranking')}</h4>
+                            <div style="display:flex; gap:20px; flex-wrap:wrap;">
+                                <div style="flex:1; min-width:200px;">
+                                    <div style="color:#27ae60; font-weight:bold;">👍 ${this.t('best_partners')}</div>
+                                    <ol style="margin:5px 0; padding-left:20px; font-size:0.9rem;">
+                                        ${top5.map(p => `<li><span translate="no" class="notranslate">${p.name}</span> (+${p.val.toFixed(1)})</li>`).join('') || `<li>-</li>`}
+                                    </ol>
+                                </div>
+                                <div style="flex:1; min-width:200px;">
+                                    <div style="color:#e74c3c; font-weight:bold;">📉 ${this.t('worst_partners')}</div>
+                                    <ol style="margin:5px 0; padding-left:20px; font-size:0.9rem;">
+                                        ${bottom5.map(p => `<li><span translate="no" class="notranslate">${p.name}</span> (${p.val.toFixed(1)})</li>`).join('') || `<li>-</li>`}
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        const historyListHtml = filteredHistory.map(h => `
+            <div class="history-card">
+                <div class="history-date"><span translate="no" class="notranslate">${h.date} ${h.time} (${h.group})</span></div>
+                ${h.matches.map(m => `
+                    <div class="history-game">
+                        <div style="font-weight:bold; margin-bottom:5px;">Game ${m.game}</div>
+                        ${m.courts.map((c, i) => `
+                            <div class="history-match">
+                                <span translate="no" class="notranslate">[C${i+1}] ${c.names[0]} & ${c.names[1]} VS ${c.names[2]} & ${c.names[3]}</span>
+                                ${c.isRegistered ? `<span class="score-box">${c.score1} - ${c.score2}</span>` : `<span style="color:#aaa; font-size:0.8rem;">-</span>`}
+                            </div>
+                        `).join('')}
+                    </div>
+                `).join('')}
+            </div>
+        `).join('') || `<p style="color:#777;">${this.t('no_history')}</p>`;
+
+        ui.innerHTML = rankingHtml + historyListHtml;
+    }
+};
+
+window.onload = () => app.init();
+</script>
+</body>
+</html>
