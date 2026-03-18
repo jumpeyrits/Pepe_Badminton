@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Badminton Match Maker Pro v4.7</title>
+    <title>Badminton Match Maker Pro v4.8</title>
     <style>
         body { font-family: sans-serif; margin: 0; padding: 0; background-color: #f4f7f6; color: #333; }
         .header { background-color: #2c3e50; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
@@ -66,7 +66,7 @@
 <div id="manual-modal" class="modal-overlay">
     <div class="modal-content">
         <h2 style="border-bottom:none; color:#2c3e50; margin-top:0; font-size: 1.4rem;" data-i18n="rm_title">📖 Badminton Match Maker Pro</h2>
-        <div style="font-size: 0.85rem; color: #7f8c8d; margin-bottom: 20px;">Version 4.7 - Official ReadMe & Manual</div>
+        <div style="font-size: 0.85rem; color: #7f8c8d; margin-bottom: 20px;">Version 4.8 - Official ReadMe & Manual</div>
         
         <div class="readme-section">
             <h3 data-i18n="rm_concept_title">🌟 コンセプトと哲学</h3>
@@ -94,7 +94,7 @@
             <ol class="readme-ul">
                 <li><strong data-i18n="rm_qs_step1_b">事前準備:</strong> <span data-i18n="rm_qs_step1_t">「クラブ・練習会管理」タブで決済用QRコード等を設定し、「名簿管理」でメンバーを登録します。</span></li>
                 <li><strong data-i18n="rm_qs_step2_b">出欠確認:</strong> <span data-i18n="rm_qs_step2_t">「今日の練習」タブで練習会を選択。メンバーをタップして「出席」にし、未納/集金済を管理します。</span></li>
-                <li><strong data-i18n="rm_qs_step3_b">試合生成:</strong> <span data-i18n="rm_qs_step3_t">「最初の組み合わせを生成」を押し、Game 1&2を作ります。以降は「次の組み合わせ」で追加します。</span></li>
+                <li><strong data-i18n="rm_qs_step3_b">試合生成:</strong> <span data-i18n="rm_qs_step3_t">「最初の組み合わせを生成」を押し、Game 1&2を作ります。以降はコート数を調整しつつ「次の組み合わせ」で追加します。</span></li>
                 <li><strong data-i18n="rm_qs_step4_b">結果入力:</strong> <span data-i18n="rm_qs_step4_t">試合後、得点を入れて「結果登録」を押すと、個人のランクと相性データが自動更新されます。</span></li>
             </ol>
         </div>
@@ -103,7 +103,6 @@
             <span translate="no" class="notranslate">&copy; 2026 Pepe (Match Maker Pro Project). All rights reserved.</span><br>
             <span data-i18n="rm_copyright">本ソフトウェアの無断複写・転載を禁じます。</span>
         </div>
-        
         <div style="text-align: center; margin-top: 25px;">
             <button onclick="document.getElementById('manual-modal').style.display='none'" style="font-size: 1.1rem; padding: 12px 40px; font-weight: bold; background-color: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2);" data-i18n="btn_back">戻る</button>
         </div>
@@ -174,7 +173,7 @@
                         <span data-i18n="mode_select">モード選択:</span> 
                         <select id="first-match-mode-select" style="max-width: 250px; padding: 10px;">
                             <option value="even_power" data-i18n="mode_even">実力均等 (男女区別なし・全体を分散)</option>
-                            <option value="level_power" data-i18n="mode_level_power">レベル別 (男女区別なし・強い人同士)</option>
+                            <option value="level_power" data-i18n="mode_level_power">レベル별 (男女区別なし・強い人同士)</option>
                             <option value="level_mixed" data-i18n="mode_level_mixed">レベル別 (ミックス考慮・強い人同士)</option>
                         </select>
                     </label>
@@ -294,12 +293,12 @@ const dict = {
         btn_generate_first: "Generate First Matches (Game 1 & 2)", btn_generate_next: "Generate Next Match", btn_edit_score: "Edit", confirm_finish: "Are you sure you want to end the session and save the record?", game: "Game", btn_finish_session: "End Session and Save", not_enough_players: "Not enough active players."
     },
     'zh-CN': {
-        rm_title: "📖 官方说明书 (ReadMe)", rm_concept_title: "🌟 核心理念", rm_concept_text: "全自动解决体育社团中实力不均与上场时间不平等的难题，彻底解放管理者。", rm_features_title: "✨ 主要功能", rm_feat1_title: "🤖 动态Elo与默契度分析", rm_feat1_text: "输入比分，AI自动学习个人实力与搭档默契度，生成最完美的对阵。", rm_feat2_title: "⚖️ 绝对公平与迟到处理", rm_feat2_text: "优先安排等待时间长的人上场，迟到者自动扣除对应场次。", rm_feat3_title: "🌍 离线优先与实用性", rm_feat3_text: "即使在无信号的体育馆也能流畅运行。支持QR收款与手动换人。", rm_qs_title: "🚀 快速开始", rm_qs_step1_b: "准备:", rm_qs_step1_t: "注册俱乐部、活动及成员。", rm_qs_step2_b: "考勤:", rm_qs_step2_t: "选择活动，点击出勤并管理缴费。", rm_qs_step3_b: "排阵:", rm_qs_step3_t: "生成前2场比赛。后续比赛可动态调整场地数。", rm_qs_step4_b: "比分:", rm_qs_step4_t: "输入比分，自动更新排名数据。", rm_copyright: "版权所有，禁止转载",
+        rm_title: "📖 官方说明书 (ReadMe)", rm_concept_title: "🌟 核心理念", rm_concept_text: "全自动解决体育社团中实力不均与上场时间不平等的难题，彻底解放管理者。", rm_features_title: "✨ 主要功能", rm_feat1_title: "🤖 动态Elo与默契度分析", rm_feat1_text: "输入比分，AI自动学习个人实力与搭档默契度，生成最完美的对阵。", rm_feat2_title: "⚖️ 绝对公平与迟到处理", rm_feat2_text: "优先安排等待时间长的人上场，迟到者自动扣除对应场次。", rm_feat3_title: "🌍 离线优先与实用性", rm_feat3_text: "即使在无信号的体育馆也能流畅运行。支持QR收款与手动换人。", rm_qs_title: "🚀 快速开始", rm_qs_step1_b: "准备:", rm_qs_step1_t: "注册俱乐部、活动及成员。", rm_qs_step2_b: "考勤:", rm_qs_step2_t: "选择活动，点击出勤并管理缴费。", rm_qs_step3_b: "排阵:", rm_qs_step3_t: "生成前2场比赛，随后按需添加。", rm_qs_step4_b: "比分:", rm_qs_step4_t: "输入比分，自动更新排名数据。", rm_copyright: "版权所有，禁止转载",
         tab_play: "今日练习", tab_members: "成员管理", tab_groups: "俱乐部/活动", tab_history: "历史记录", start_session: "开始练习", courts: "场地数:", btn_attendance: "考勤打卡", attendance_mgmt: "出勤与收款", btn_show_qr: "📱 显示收款码", filter_club: "筛选俱乐部:", match_settings: "比赛设置", mode_select: "模式选择:", mode_even: "实力均衡 (不分性别)", mode_level_power: "按水平分组 (不分性别)", mode_level_mixed: "按水平分组 (优先混双)", btn_generate: "生成下一轮对阵", current_games: "进行中的比赛", btn_end_session: "结束练习并保存", reg_member: "注册新成员", edit_member: "编辑成员", male: "男", female: "女", club_none: "无", btn_add_member: "添加成员", btn_update: "更新信息", btn_cancel: "取消", member_list: "成员列表", club_mgmt: "俱乐部管理", btn_add_club: "添加", add_group: "活动管理", edit_group: "编辑活动", qr_upload: "收款二维码 (可选):", btn_add_group: "添加活动", history_title: "历史记录", filter_member: "搜索成员:", btn_close: "关闭", btn_back: "返回", status_present: "出勤", status_absent: "休息", pay_done: "已付", pay_wait: "未付", play_count: "场次", no_members: "没有成员", no_groups: "没有数据", btn_edit: "编辑", btn_delete: "删除", court: "场地", register_score: "提交", registered: "✓ 已存", edit_players: "✍️ 调整人员", save_players: "💾 确认修改", all_clubs: "全部", all_members: "所有人", synergy_ranking: "默契度 (协同) 排名", best_partners: "最佳搭档", worst_partners: "需注意搭档", prompt_edit_club: "输入新名称:",
         btn_generate_first: "生成首发对阵 (Game 1 & 2)", btn_generate_next: "生成下一场对阵", btn_edit_score: "修改", confirm_finish: "确定要结束练习并保存记录吗？", game: "Game", btn_finish_session: "结束练习并保存", not_enough_players: "活跃人数不足。"
     },
     'zh-TW': {
-        rm_title: "📖 官方說明書 (ReadMe)", rm_concept_title: "🌟 核心理念", rm_concept_text: "全自動解決體育社團中實力不均與上場時間不平等的難題，徹底解放管理者。", rm_features_title: "✨ 主要功能", rm_feat1_title: "🤖 動態Elo與默契度分析", rm_feat1_text: "輸入比分，AI自動學習個人實力與搭檔默契度，生成最完美的對陣。", rm_feat2_title: "⚖️ 絕對公平與遲到處理", rm_feat2_text: "優先安排等待時間長的人上場，遲到者自動扣除對應場次。", rm_feat3_title: "🌍 離線優先與實用性", rm_feat3_text: "即使在無信號的體育館也能流暢運行。支持QR收款與手動換人。", rm_qs_title: "🚀 快速開始", rm_qs_step1_b: "準備:", rm_qs_step1_t: "註冊俱樂部、活動及成員。", rm_qs_step2_b: "考勤:", rm_qs_step2_t: "選擇活動，點擊出勤並管理繳費。", rm_qs_step3_b: "排陣:", rm_qs_step3_t: "生成前2場比賽。後續比賽可動態調整場地數。", rm_qs_step4_b: "比分:", rm_qs_step4_t: "輸入比分，自動更新排名數據。", rm_copyright: "版權所有，禁止轉載",
+        rm_title: "📖 官方說明書 (ReadMe)", rm_concept_title: "🌟 核心理念", rm_concept_text: "全自動解決體育社團中實力不均與上場時間不平等的難題，徹底解放管理者。", rm_features_title: "✨ 主要功能", rm_feat1_title: "🤖 動態Elo與默契度分析", rm_feat1_text: "輸入比分，AI自動學習個人實力與搭檔默契度，生成最完美的對陣。", rm_feat2_title: "⚖️ 絕對公平與遲到處理", rm_feat2_text: "優先安排等待時間長的人上場，遲到者自動扣除對應場次。", rm_feat3_title: "🌍 離線優先與實用性", rm_feat3_text: "即使在無信號的體育館也能流暢運行。支持QR收款與手動換人。", rm_qs_title: "🚀 快速開始", rm_qs_step1_b: "準備:", rm_qs_step1_t: "註冊俱樂部、活動及成員。", rm_qs_step2_b: "考勤:", rm_qs_step2_t: "選擇活動，點擊出勤並管理繳費。", rm_qs_step3_b: "排陣:", rm_qs_step3_t: "生成前2場比賽，隨後按需添加。", rm_qs_step4_b: "比分:", rm_qs_step4_t: "輸入比分，自動更新排名數據。", rm_copyright: "版權所有，禁止轉載",
         tab_play: "今日練習", tab_members: "成員管理", tab_groups: "俱樂部/活動", tab_history: "歷史記錄", start_session: "開始練習", courts: "場地數:", btn_attendance: "考勤打卡", attendance_mgmt: "出勤與收款", btn_show_qr: "📱 顯示收款碼", filter_club: "篩選俱樂部:", match_settings: "比賽設置", mode_select: "模式選擇:", mode_even: "實力均衡 (不分性別)", mode_level_power: "按水平分組 (不分性別)", mode_level_mixed: "按水平分組 (優先混雙)", btn_generate: "生成下一輪對陣", current_games: "進行中的比賽", btn_end_session: "結束練習並保存", reg_member: "註冊新成員", edit_member: "編輯成員", male: "男", female: "女", club_none: "無", btn_add_member: "添加成員", btn_update: "更新信息", btn_cancel: "取消", member_list: "成員列表", club_mgmt: "俱樂部管理", btn_add_club: "添加", add_group: "活動管理", edit_group: "編輯活動", qr_upload: "收款二維碼 (可選):", btn_add_group: "添加活動", history_title: "歷史記錄", filter_member: "搜索成員:", btn_close: "關閉", btn_back: "返回", status_present: "出勤", status_absent: "休息", pay_done: "已付", pay_wait: "未付", play_count: "場次", no_members: "沒有成員", no_groups: "沒有數據", btn_edit: "編輯", btn_delete: "刪除", court: "場地", register_score: "提交", registered: "✓ 已存", edit_players: "✍️ 調整人員", save_players: "💾 確認修改", all_clubs: "全部", all_members: "所有人", synergy_ranking: "默契度 (協同) 排名", best_partners: "最佳搭檔", worst_partners: "需注意搭檔", prompt_edit_club: "輸入新名稱:",
         btn_generate_first: "生成首發對陣 (Game 1 & 2)", btn_generate_next: "生成下一場對陣", btn_edit_score: "修改", confirm_finish: "確定要結束練習並保存記錄嗎？", game: "Game", btn_finish_session: "結束練習並保存", not_enough_players: "活躍人數不足。"
     },
@@ -314,7 +313,7 @@ const dict = {
         btn_generate_first: "Buat Laga Awal (Game 1 & 2)", btn_generate_next: "Buat Laga Selanjutnya", btn_edit_score: "Edit", confirm_finish: "Apakah Anda yakin ingin mengakhiri sesi dan menyimpan riwayat?", game: "Game", btn_finish_session: "Akhiri Sesi dan Simpan", not_enough_players: "Pemain aktif tidak cukup."
     },
     ko: {
-        rm_title: "📖 Match Maker Pro 공식 매뉴얼", rm_concept_title: "🌟 컨셉 및 철학", rm_concept_text: "실력 차이와 휴식 시간의 불평등을 완벽하게 자동 해결하여 운영자의 부담을 줄여주는 차세대 도구입니다.", rm_features_title: "✨ 주요 기능", rm_feat1_title: "🤖 동적 Elo 레이팅 및 시너지", rm_feat1_text: "점수만 입력하면 AI가 개인 실력과 파트너 간의 시너지를 학습하여 최적의 매치업을 생성합니다.", rm_feat2_title: "⚖️ 완벽한 공정성", rm_feat2_text: "대기 횟수가 많은 멤버를 우선 배치하며, 지각자에게는 자동으로 페널티를 부여합니다.", rm_feat3_title: "🌍 오프라인 우선 설계", rm_feat3_text: "인터넷이 터지지 않는 체육관에서도 원활하게 작동합니다. QR 결제 및 수동 멤버 변경 지원.", rm_qs_title: "🚀 빠른 시작", rm_qs_step1_b: "준비:", rm_qs_step1_t: "클럽, 연습 세션, 멤버를 등록합니다.", rm_qs_step2_b: "출석:", rm_qs_step2_t: "세션을 선택하고 출석 및 수금을 관리합니다.", rm_qs_step3_b: "매칭:", rm_qs_step3_t: "첫 2게임을 생성하고, 필요시 코트 수를 변경하며 추가합니다.", rm_qs_step4_b: "점수:", rm_qs_step4_t: "게임 후 점수를 입력하면 데이터가 자동 업데이트됩니다.", rm_copyright: "모든 권리 보유.",
+        rm_title: "📖 Match Maker Pro 공식 매뉴얼", rm_concept_title: "🌟 컨셉 및 철학", rm_concept_text: "실력 차이와 휴식 시간의 불평등을 완벽하게 자동 해결하여 운영자의 부담을 줄여주는 차세대 도구입니다.", rm_features_title: "✨ 주요 기능", rm_feat1_title: "🤖 동적 Elo 레이팅 및 시너지", rm_feat1_text: "점수만 입력하면 AI가 개인 실력과 파트너 간의 시너지를 학습하여 최적의 매치업을 생성합니다.", rm_feat2_title: "⚖️ 완벽한 공정성", rm_feat2_text: "대기 횟수가 많은 멤버를 우선 배치하며, 지각자에게는 자동으로 페널티를 부여합니다.", rm_feat3_title: "🌍 오프라인 우선 설계", rm_feat3_text: "인터넷이 터지지 않는 체육관에서도 원활하게 작동합니다. QR 결제 및 수동 멤버 변경 지원.", rm_qs_title: "🚀 빠른 시작", rm_qs_step1_b: "준비:", rm_qs_step1_t: "클럽, 연습 세션, 멤버를 등록합니다.", rm_qs_step2_b: "출석:", rm_qs_step2_t: "세션을 선택하고 출석 및 수금을 관리합니다.", rm_qs_step3_b: "매칭:", rm_qs_step3_t: "초기 2게임을 생성한 후, 필요시 코트 수를 변경하며 추가합니다.", rm_qs_step4_b: "점수:", rm_qs_step4_t: "게임 후 점수를 입력하면 데이터가 자동 업데이트됩니다.", rm_copyright: "모든 권리 보유.",
         tab_play: "오늘의 연습", tab_members: "명부 관리", tab_groups: "클럽/연습 관리", tab_history: "과거 기록", start_session: "연습 시작", courts: "코트 수:", btn_attendance: "출석 확인", attendance_mgmt: "출석 및 수금", btn_show_qr: "📱 QR 표시", filter_club: "클럽 필터:", match_settings: "매치 설정", mode_select: "모드 선택:", mode_even: "균등 믹스", mode_level_power: "수준별 (성별 무관)", mode_level_mixed: "수준별 (혼복 우선)", btn_generate: "다음 매치 생성", current_games: "진행 중인 게임", btn_end_session: "종료 및 저장", reg_member: "신규 멤버 등록", edit_member: "멤버 편집", male: "남성", female: "여성", club_none: "소속 없음", btn_add_member: "멤버 추가", btn_update: "업데이트", btn_cancel: "취소", member_list: "등록 멤버 목록", club_mgmt: "소속 클럽 관리", btn_add_club: "클럽 추가", add_group: "연습 세션 관리", edit_group: "세션 편집", qr_upload: "결제 QR (선택):", btn_add_group: "세션 추가", history_title: "연습 기록", filter_member: "멤버 검색:", btn_close: "닫기", btn_back: "뒤로", status_present: "출석", status_absent: "휴식", pay_done: "수금 완료", pay_wait: "미납", play_count: "게임 수", no_members: "멤버가 없습니다.", no_groups: "데이터가 없습니다.", btn_edit: "편집", btn_delete: "삭제", court: "코트", register_score: "결과 등록", registered: "✓ 등록됨", edit_players: "✍️ 멤버 변경", save_players: "💾 변경 확정", all_clubs: "모두 표시", all_members: "모든 멤버", synergy_ranking: "시너지 랭킹", best_partners: "베스트 파트너", worst_partners: "워스트 파트너", prompt_edit_club: "새 클럽 이름 입력:",
         btn_generate_first: "첫 번째 매치 생성 (Game 1 & 2)", btn_generate_next: "다음 매치 생성", btn_edit_score: "수정", confirm_finish: "정말로 연습을 종료하고 기록을 저장하시겠습니까?", game: "Game", btn_finish_session: "연습 종료 및 기록 저장", not_enough_players: "활동 중인 멤버가 부족합니다."
     },
@@ -563,7 +562,7 @@ const app = {
         
         this.members.forEach(m => { m.active = false; m.playCount = 0; });
         const now = new Date();
-        this.currentSession = { date: now.toLocaleDateString(), time: now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), group: targetGroupName, qrData: targetGroupObj ? targetGroupObj.qrData : '', courts: courts, gameCount: 1, matches: [], payments: {} };
+        this.currentSession = { date: now.toLocaleDateString(), time: now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), group: targetGroupName, qrData: targetGroupObj ? targetGroupObj.qrData : '', courts: courts, gameCount: 1, matches: [] };
 
         document.getElementById('current-session-group-name').innerText = targetGroupName;
         document.getElementById('first-court-count').value = courts;
@@ -593,7 +592,6 @@ const app = {
             this.renderAttendance(); 
         }
     },
-    togglePayment(id) { if(this.currentSession) { this.currentSession.payments[id] = !this.currentSession.payments[id]; this.renderAttendance(); } },
     renderAttendance() {
         const ui = document.getElementById('member-ui'); const filter = document.getElementById('attendance-filter-club').value;
         const displayMembers = this.members.filter(m => (filter === '' || m.club === filter || m.active));
@@ -602,7 +600,6 @@ const app = {
                 <div style="font-weight: bold; font-size: 1.05rem; margin-bottom: 5px;"><span translate="no" class="notranslate">${m.name}</span> <span style="font-size:0.8rem; color:#888;">(${this.getRank(m.rating)})</span></div>
                 <div style="font-size: 0.8rem; color: #666; margin-bottom: 8px;">${this.t('play_count')}: ${m.playCount}</div>
                 <button class="status-btn ${m.active ? 'status-active' : 'status-inactive'}" onclick="app.toggleStatus(${m.id})">${m.active ? this.t('status_present') : this.t('status_absent')}</button>
-                ${m.active ? `<button class="status-btn ${this.currentSession.payments[m.id] ? 'pay-done' : 'pay-wait'}" onclick="app.togglePayment(${m.id})">${this.currentSession.payments[m.id] ? this.t('pay_done') : this.t('pay_wait')}</button>` : ''}
             </div>
         `).join('');
     },
@@ -621,7 +618,6 @@ const app = {
         });
         return [ players[bestPattern.t1[0]], players[bestPattern.t1[1]], players[bestPattern.t2[0]], players[bestPattern.t2[1]] ];
     },
-    
     generateMatches(isFirst = false) {
         if(!this.currentSession) return;
         
@@ -680,7 +676,6 @@ const app = {
         
         this.renderAttendance(); this.renderMatches();
     },
-
     toggleEditMatch(gIdx) { 
         this.currentSession.matches[gIdx].isEditing = !this.currentSession.matches[gIdx].isEditing; 
         this.renderMatches(); 
@@ -699,10 +694,18 @@ const app = {
         this.currentSession.matches[gIdx].courts[cIdx].isEditingScore = true;
         this.renderMatches();
     },
+    
+    // --- スコア用ドロップダウンの生成 ---
     renderMatches() {
         const ui = document.getElementById('courts-ui');
         if(!this.currentSession || this.currentSession.matches.length === 0) { ui.innerHTML = ''; return; }
         
+        const scoreOpts = (val) => {
+            let res = '<option value="">-</option>';
+            for(let i=0; i<=30; i++) res += `<option value="${i}" ${val === i ? 'selected' : ''}>${i}</option>`;
+            return res;
+        };
+
         let html = '';
         this.currentSession.matches.forEach((matchRecord, gIdx) => {
             html += `<div style="background:#fff; border:2px solid #34495e; border-radius:8px; margin-bottom:20px; padding:15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">`;
@@ -736,9 +739,13 @@ const app = {
                                 </div>
                             ` : `
                                 <div style="display:flex; justify-content:center; align-items:center; gap:10px; width:100%;">
-                                    <input type="number" id="score_t1_${gIdx}_${cIdx}" value="${c.score1 !== null ? c.score1 : ''}" placeholder="T1" style="width: 50px; font-size:1.1rem; text-align:center;">
+                                    <select id="score_t1_${gIdx}_${cIdx}" style="font-size:1.1rem; padding:4px; border-radius:4px;">
+                                        ${scoreOpts(c.score1)}
+                                    </select>
                                     <span style="font-weight:bold;">-</span>
-                                    <input type="number" id="score_t2_${gIdx}_${cIdx}" value="${c.score2 !== null ? c.score2 : ''}" placeholder="T2" style="width: 50px; font-size:1.1rem; text-align:center;">
+                                    <select id="score_t2_${gIdx}_${cIdx}" style="font-size:1.1rem; padding:4px; border-radius:4px;">
+                                        ${scoreOpts(c.score2)}
+                                    </select>
                                     <button class="btn-success" onclick="app.registerScore(${gIdx}, ${cIdx})">${this.t('register_score')}</button>
                                 </div>
                             `}
@@ -763,6 +770,7 @@ const app = {
         const t2_p1 = this.members.find(m => m.id === c.team2[0]); const t2_p2 = this.members.find(m => m.id === c.team2[1]);
         if(!t1_p1 || !t1_p2 || !t2_p1 || !t2_p2) return;
 
+        // Rollback previous data if editing
         if (c.isRegistered) {
             t1_p1.rating -= c.appliedDelta.p1; t1_p2.rating -= c.appliedDelta.p2;
             t2_p1.rating -= c.appliedDelta.p3; t2_p2.rating -= c.appliedDelta.p4;
